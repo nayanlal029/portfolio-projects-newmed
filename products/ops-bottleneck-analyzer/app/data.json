@@ -1,0 +1,1075 @@
+{
+ "by_task": [
+  {
+   "practice_id": "P01",
+   "practice": "Lakeview Dermatology - Downtown",
+   "task": "Appointment scheduling calls",
+   "role": "Front desk",
+   "hours_per_month": 117.5,
+   "cost_per_month": 2586.0,
+   "events_13w": 3515
+  },
+  {
+   "practice_id": "P01",
+   "practice": "Lakeview Dermatology - Downtown",
+   "task": "Denial rework & resubmission",
+   "role": "Billing",
+   "hours_per_month": 39.2,
+   "cost_per_month": 1098.0,
+   "events_13w": 282
+  },
+  {
+   "practice_id": "P01",
+   "practice": "Lakeview Dermatology - Downtown",
+   "task": "Fax & document indexing",
+   "role": "Front desk",
+   "hours_per_month": 21.7,
+   "cost_per_month": 476.0,
+   "events_13w": 956
+  },
+  {
+   "practice_id": "P01",
+   "practice": "Lakeview Dermatology - Downtown",
+   "task": "Manual eligibility verification",
+   "role": "Front desk",
+   "hours_per_month": 41.3,
+   "cost_per_month": 908.0,
+   "events_13w": 1076
+  },
+  {
+   "practice_id": "P01",
+   "practice": "Lakeview Dermatology - Downtown",
+   "task": "Manual report assembly",
+   "role": "Admin",
+   "hours_per_month": 7.0,
+   "cost_per_month": 209.0,
+   "events_13w": 84
+  },
+  {
+   "practice_id": "P01",
+   "practice": "Lakeview Dermatology - Downtown",
+   "task": "No-show follow-up outreach",
+   "role": "Front desk",
+   "hours_per_month": 11.4,
+   "cost_per_month": 251.0,
+   "events_13w": 410
+  },
+  {
+   "practice_id": "P01",
+   "practice": "Lakeview Dermatology - Downtown",
+   "task": "Paper intake form transcription",
+   "role": "Front desk",
+   "hours_per_month": 65.0,
+   "cost_per_month": 1431.0,
+   "events_13w": 1289
+  },
+  {
+   "practice_id": "P01",
+   "practice": "Lakeview Dermatology - Downtown",
+   "task": "Patient billing questions",
+   "role": "Billing",
+   "hours_per_month": 25.4,
+   "cost_per_month": 711.0,
+   "events_13w": 563
+  },
+  {
+   "practice_id": "P01",
+   "practice": "Lakeview Dermatology - Downtown",
+   "task": "Prescription refill requests",
+   "role": "Clinical staff",
+   "hours_per_month": 15.0,
+   "cost_per_month": 526.0,
+   "events_13w": 462
+  },
+  {
+   "practice_id": "P01",
+   "practice": "Lakeview Dermatology - Downtown",
+   "task": "Prior-auth requests & follow-up",
+   "role": "Billing",
+   "hours_per_month": 46.5,
+   "cost_per_month": 1301.0,
+   "events_13w": 380
+  },
+  {
+   "practice_id": "P01",
+   "practice": "Lakeview Dermatology - Downtown",
+   "task": "Referral coordination",
+   "role": "Clinical staff",
+   "hours_per_month": 15.9,
+   "cost_per_month": 557.0,
+   "events_13w": 280
+  },
+  {
+   "practice_id": "P01",
+   "practice": "Lakeview Dermatology - Downtown",
+   "task": "Reschedule / cancellation handling",
+   "role": "Front desk",
+   "hours_per_month": 18.4,
+   "cost_per_month": 404.0,
+   "events_13w": 662
+  },
+  {
+   "practice_id": "P02",
+   "practice": "Lakeview Dermatology - Northside",
+   "task": "Appointment scheduling calls",
+   "role": "Front desk",
+   "hours_per_month": 93.5,
+   "cost_per_month": 2056.0,
+   "events_13w": 2800
+  },
+  {
+   "practice_id": "P02",
+   "practice": "Lakeview Dermatology - Northside",
+   "task": "Denial rework & resubmission",
+   "role": "Billing",
+   "hours_per_month": 42.1,
+   "cost_per_month": 1178.0,
+   "events_13w": 299
+  },
+  {
+   "practice_id": "P02",
+   "practice": "Lakeview Dermatology - Northside",
+   "task": "Fax & document indexing",
+   "role": "Front desk",
+   "hours_per_month": 19.7,
+   "cost_per_month": 433.0,
+   "events_13w": 891
+  },
+  {
+   "practice_id": "P02",
+   "practice": "Lakeview Dermatology - Northside",
+   "task": "Manual eligibility verification",
+   "role": "Front desk",
+   "hours_per_month": 48.3,
+   "cost_per_month": 1063.0,
+   "events_13w": 1210
+  },
+  {
+   "practice_id": "P02",
+   "practice": "Lakeview Dermatology - Northside",
+   "task": "Manual report assembly",
+   "role": "Admin",
+   "hours_per_month": 9.9,
+   "cost_per_month": 296.0,
+   "events_13w": 123
+  },
+  {
+   "practice_id": "P02",
+   "practice": "Lakeview Dermatology - Northside",
+   "task": "No-show follow-up outreach",
+   "role": "Front desk",
+   "hours_per_month": 22.8,
+   "cost_per_month": 501.0,
+   "events_13w": 825
+  },
+  {
+   "practice_id": "P02",
+   "practice": "Lakeview Dermatology - Northside",
+   "task": "Paper intake form transcription",
+   "role": "Front desk",
+   "hours_per_month": 40.7,
+   "cost_per_month": 896.0,
+   "events_13w": 817
+  },
+  {
+   "practice_id": "P02",
+   "practice": "Lakeview Dermatology - Northside",
+   "task": "Patient billing questions",
+   "role": "Billing",
+   "hours_per_month": 26.3,
+   "cost_per_month": 737.0,
+   "events_13w": 603
+  },
+  {
+   "practice_id": "P02",
+   "practice": "Lakeview Dermatology - Northside",
+   "task": "Prescription refill requests",
+   "role": "Clinical staff",
+   "hours_per_month": 16.8,
+   "cost_per_month": 589.0,
+   "events_13w": 500
+  },
+  {
+   "practice_id": "P02",
+   "practice": "Lakeview Dermatology - Northside",
+   "task": "Prior-auth requests & follow-up",
+   "role": "Billing",
+   "hours_per_month": 41.0,
+   "cost_per_month": 1148.0,
+   "events_13w": 336
+  },
+  {
+   "practice_id": "P02",
+   "practice": "Lakeview Dermatology - Northside",
+   "task": "Referral coordination",
+   "role": "Clinical staff",
+   "hours_per_month": 17.7,
+   "cost_per_month": 618.0,
+   "events_13w": 319
+  },
+  {
+   "practice_id": "P02",
+   "practice": "Lakeview Dermatology - Northside",
+   "task": "Reschedule / cancellation handling",
+   "role": "Front desk",
+   "hours_per_month": 20.5,
+   "cost_per_month": 451.0,
+   "events_13w": 740
+  },
+  {
+   "practice_id": "P03",
+   "practice": "Lakeview GI Associates",
+   "task": "Appointment scheduling calls",
+   "role": "Front desk",
+   "hours_per_month": 75.1,
+   "cost_per_month": 1652.0,
+   "events_13w": 2229
+  },
+  {
+   "practice_id": "P03",
+   "practice": "Lakeview GI Associates",
+   "task": "Denial rework & resubmission",
+   "role": "Billing",
+   "hours_per_month": 41.1,
+   "cost_per_month": 1150.0,
+   "events_13w": 294
+  },
+  {
+   "practice_id": "P03",
+   "practice": "Lakeview GI Associates",
+   "task": "Fax & document indexing",
+   "role": "Front desk",
+   "hours_per_month": 20.3,
+   "cost_per_month": 446.0,
+   "events_13w": 907
+  },
+  {
+   "practice_id": "P03",
+   "practice": "Lakeview GI Associates",
+   "task": "Manual eligibility verification",
+   "role": "Front desk",
+   "hours_per_month": 46.8,
+   "cost_per_month": 1029.0,
+   "events_13w": 1205
+  },
+  {
+   "practice_id": "P03",
+   "practice": "Lakeview GI Associates",
+   "task": "Manual report assembly",
+   "role": "Admin",
+   "hours_per_month": 9.9,
+   "cost_per_month": 298.0,
+   "events_13w": 116
+  },
+  {
+   "practice_id": "P03",
+   "practice": "Lakeview GI Associates",
+   "task": "No-show follow-up outreach",
+   "role": "Front desk",
+   "hours_per_month": 11.2,
+   "cost_per_month": 247.0,
+   "events_13w": 406
+  },
+  {
+   "practice_id": "P03",
+   "practice": "Lakeview GI Associates",
+   "task": "Paper intake form transcription",
+   "role": "Front desk",
+   "hours_per_month": 42.4,
+   "cost_per_month": 932.0,
+   "events_13w": 843
+  },
+  {
+   "practice_id": "P03",
+   "practice": "Lakeview GI Associates",
+   "task": "Patient billing questions",
+   "role": "Billing",
+   "hours_per_month": 23.4,
+   "cost_per_month": 654.0,
+   "events_13w": 523
+  },
+  {
+   "practice_id": "P03",
+   "practice": "Lakeview GI Associates",
+   "task": "Prescription refill requests",
+   "role": "Clinical staff",
+   "hours_per_month": 16.9,
+   "cost_per_month": 590.0,
+   "events_13w": 498
+  },
+  {
+   "practice_id": "P03",
+   "practice": "Lakeview GI Associates",
+   "task": "Prior-auth requests & follow-up",
+   "role": "Billing",
+   "hours_per_month": 101.0,
+   "cost_per_month": 2829.0,
+   "events_13w": 808
+  },
+  {
+   "practice_id": "P03",
+   "practice": "Lakeview GI Associates",
+   "task": "Referral coordination",
+   "role": "Clinical staff",
+   "hours_per_month": 25.7,
+   "cost_per_month": 898.0,
+   "events_13w": 454
+  },
+  {
+   "practice_id": "P03",
+   "practice": "Lakeview GI Associates",
+   "task": "Reschedule / cancellation handling",
+   "role": "Front desk",
+   "hours_per_month": 18.1,
+   "cost_per_month": 397.0,
+   "events_13w": 656
+  },
+  {
+   "practice_id": "P04",
+   "practice": "Lakeview Endoscopy Center",
+   "task": "Appointment scheduling calls",
+   "role": "Front desk",
+   "hours_per_month": 71.0,
+   "cost_per_month": 1561.0,
+   "events_13w": 2134
+  },
+  {
+   "practice_id": "P04",
+   "practice": "Lakeview Endoscopy Center",
+   "task": "Denial rework & resubmission",
+   "role": "Billing",
+   "hours_per_month": 42.0,
+   "cost_per_month": 1176.0,
+   "events_13w": 305
+  },
+  {
+   "practice_id": "P04",
+   "practice": "Lakeview Endoscopy Center",
+   "task": "Fax & document indexing",
+   "role": "Front desk",
+   "hours_per_month": 21.8,
+   "cost_per_month": 479.0,
+   "events_13w": 973
+  },
+  {
+   "practice_id": "P04",
+   "practice": "Lakeview Endoscopy Center",
+   "task": "Manual eligibility verification",
+   "role": "Front desk",
+   "hours_per_month": 70.6,
+   "cost_per_month": 1554.0,
+   "events_13w": 1810
+  },
+  {
+   "practice_id": "P04",
+   "practice": "Lakeview Endoscopy Center",
+   "task": "Manual report assembly",
+   "role": "Admin",
+   "hours_per_month": 8.6,
+   "cost_per_month": 259.0,
+   "events_13w": 103
+  },
+  {
+   "practice_id": "P04",
+   "practice": "Lakeview Endoscopy Center",
+   "task": "No-show follow-up outreach",
+   "role": "Front desk",
+   "hours_per_month": 12.4,
+   "cost_per_month": 272.0,
+   "events_13w": 449
+  },
+  {
+   "practice_id": "P04",
+   "practice": "Lakeview Endoscopy Center",
+   "task": "Paper intake form transcription",
+   "role": "Front desk",
+   "hours_per_month": 41.8,
+   "cost_per_month": 921.0,
+   "events_13w": 841
+  },
+  {
+   "practice_id": "P04",
+   "practice": "Lakeview Endoscopy Center",
+   "task": "Patient billing questions",
+   "role": "Billing",
+   "hours_per_month": 24.9,
+   "cost_per_month": 697.0,
+   "events_13w": 564
+  },
+  {
+   "practice_id": "P04",
+   "practice": "Lakeview Endoscopy Center",
+   "task": "Prescription refill requests",
+   "role": "Clinical staff",
+   "hours_per_month": 14.8,
+   "cost_per_month": 518.0,
+   "events_13w": 454
+  },
+  {
+   "practice_id": "P04",
+   "practice": "Lakeview Endoscopy Center",
+   "task": "Prior-auth requests & follow-up",
+   "role": "Billing",
+   "hours_per_month": 82.5,
+   "cost_per_month": 2310.0,
+   "events_13w": 665
+  },
+  {
+   "practice_id": "P04",
+   "practice": "Lakeview Endoscopy Center",
+   "task": "Referral coordination",
+   "role": "Clinical staff",
+   "hours_per_month": 16.8,
+   "cost_per_month": 587.0,
+   "events_13w": 306
+  },
+  {
+   "practice_id": "P04",
+   "practice": "Lakeview Endoscopy Center",
+   "task": "Reschedule / cancellation handling",
+   "role": "Front desk",
+   "hours_per_month": 18.9,
+   "cost_per_month": 417.0,
+   "events_13w": 680
+  },
+  {
+   "practice_id": "P05",
+   "practice": "Lakeview Orthopedics - Main",
+   "task": "Appointment scheduling calls",
+   "role": "Front desk",
+   "hours_per_month": 80.2,
+   "cost_per_month": 1764.0,
+   "events_13w": 2411
+  },
+  {
+   "practice_id": "P05",
+   "practice": "Lakeview Orthopedics - Main",
+   "task": "Denial rework & resubmission",
+   "role": "Billing",
+   "hours_per_month": 81.4,
+   "cost_per_month": 2280.0,
+   "events_13w": 596
+  },
+  {
+   "practice_id": "P05",
+   "practice": "Lakeview Orthopedics - Main",
+   "task": "Fax & document indexing",
+   "role": "Front desk",
+   "hours_per_month": 36.0,
+   "cost_per_month": 792.0,
+   "events_13w": 1599
+  },
+  {
+   "practice_id": "P05",
+   "practice": "Lakeview Orthopedics - Main",
+   "task": "Manual eligibility verification",
+   "role": "Front desk",
+   "hours_per_month": 42.3,
+   "cost_per_month": 931.0,
+   "events_13w": 1100
+  },
+  {
+   "practice_id": "P05",
+   "practice": "Lakeview Orthopedics - Main",
+   "task": "Manual report assembly",
+   "role": "Admin",
+   "hours_per_month": 8.4,
+   "cost_per_month": 252.0,
+   "events_13w": 100
+  },
+  {
+   "practice_id": "P05",
+   "practice": "Lakeview Orthopedics - Main",
+   "task": "No-show follow-up outreach",
+   "role": "Front desk",
+   "hours_per_month": 12.0,
+   "cost_per_month": 265.0,
+   "events_13w": 425
+  },
+  {
+   "practice_id": "P05",
+   "practice": "Lakeview Orthopedics - Main",
+   "task": "Paper intake form transcription",
+   "role": "Front desk",
+   "hours_per_month": 40.9,
+   "cost_per_month": 900.0,
+   "events_13w": 821
+  },
+  {
+   "practice_id": "P05",
+   "practice": "Lakeview Orthopedics - Main",
+   "task": "Patient billing questions",
+   "role": "Billing",
+   "hours_per_month": 24.9,
+   "cost_per_month": 697.0,
+   "events_13w": 554
+  },
+  {
+   "practice_id": "P05",
+   "practice": "Lakeview Orthopedics - Main",
+   "task": "Prescription refill requests",
+   "role": "Clinical staff",
+   "hours_per_month": 15.7,
+   "cost_per_month": 550.0,
+   "events_13w": 478
+  },
+  {
+   "practice_id": "P05",
+   "practice": "Lakeview Orthopedics - Main",
+   "task": "Prior-auth requests & follow-up",
+   "role": "Billing",
+   "hours_per_month": 51.0,
+   "cost_per_month": 1429.0,
+   "events_13w": 411
+  },
+  {
+   "practice_id": "P05",
+   "practice": "Lakeview Orthopedics - Main",
+   "task": "Referral coordination",
+   "role": "Clinical staff",
+   "hours_per_month": 18.3,
+   "cost_per_month": 641.0,
+   "events_13w": 327
+  },
+  {
+   "practice_id": "P05",
+   "practice": "Lakeview Orthopedics - Main",
+   "task": "Reschedule / cancellation handling",
+   "role": "Front desk",
+   "hours_per_month": 17.9,
+   "cost_per_month": 395.0,
+   "events_13w": 653
+  },
+  {
+   "practice_id": "P06",
+   "practice": "Lakeview Sports Medicine",
+   "task": "Appointment scheduling calls",
+   "role": "Front desk",
+   "hours_per_month": 79.0,
+   "cost_per_month": 1737.0,
+   "events_13w": 2352
+  },
+  {
+   "practice_id": "P06",
+   "practice": "Lakeview Sports Medicine",
+   "task": "Denial rework & resubmission",
+   "role": "Billing",
+   "hours_per_month": 41.8,
+   "cost_per_month": 1170.0,
+   "events_13w": 299
+  },
+  {
+   "practice_id": "P06",
+   "practice": "Lakeview Sports Medicine",
+   "task": "Fax & document indexing",
+   "role": "Front desk",
+   "hours_per_month": 20.7,
+   "cost_per_month": 455.0,
+   "events_13w": 911
+  },
+  {
+   "practice_id": "P06",
+   "practice": "Lakeview Sports Medicine",
+   "task": "Manual eligibility verification",
+   "role": "Front desk",
+   "hours_per_month": 45.4,
+   "cost_per_month": 999.0,
+   "events_13w": 1155
+  },
+  {
+   "practice_id": "P06",
+   "practice": "Lakeview Sports Medicine",
+   "task": "Manual report assembly",
+   "role": "Admin",
+   "hours_per_month": 8.0,
+   "cost_per_month": 241.0,
+   "events_13w": 94
+  },
+  {
+   "practice_id": "P06",
+   "practice": "Lakeview Sports Medicine",
+   "task": "No-show follow-up outreach",
+   "role": "Front desk",
+   "hours_per_month": 11.0,
+   "cost_per_month": 241.0,
+   "events_13w": 394
+  },
+  {
+   "practice_id": "P06",
+   "practice": "Lakeview Sports Medicine",
+   "task": "Paper intake form transcription",
+   "role": "Front desk",
+   "hours_per_month": 40.0,
+   "cost_per_month": 880.0,
+   "events_13w": 796
+  },
+  {
+   "practice_id": "P06",
+   "practice": "Lakeview Sports Medicine",
+   "task": "Patient billing questions",
+   "role": "Billing",
+   "hours_per_month": 25.3,
+   "cost_per_month": 709.0,
+   "events_13w": 581
+  },
+  {
+   "practice_id": "P06",
+   "practice": "Lakeview Sports Medicine",
+   "task": "Prescription refill requests",
+   "role": "Clinical staff",
+   "hours_per_month": 23.3,
+   "cost_per_month": 814.0,
+   "events_13w": 694
+  },
+  {
+   "practice_id": "P06",
+   "practice": "Lakeview Sports Medicine",
+   "task": "Prior-auth requests & follow-up",
+   "role": "Billing",
+   "hours_per_month": 46.1,
+   "cost_per_month": 1290.0,
+   "events_13w": 368
+  },
+  {
+   "practice_id": "P06",
+   "practice": "Lakeview Sports Medicine",
+   "task": "Referral coordination",
+   "role": "Clinical staff",
+   "hours_per_month": 17.0,
+   "cost_per_month": 593.0,
+   "events_13w": 299
+  },
+  {
+   "practice_id": "P06",
+   "practice": "Lakeview Sports Medicine",
+   "task": "Reschedule / cancellation handling",
+   "role": "Front desk",
+   "hours_per_month": 32.4,
+   "cost_per_month": 713.0,
+   "events_13w": 1164
+  },
+  {
+   "practice_id": "P07",
+   "practice": "Lakeview Eye Institute",
+   "task": "Appointment scheduling calls",
+   "role": "Front desk",
+   "hours_per_month": 77.5,
+   "cost_per_month": 1704.0,
+   "events_13w": 2317
+  },
+  {
+   "practice_id": "P07",
+   "practice": "Lakeview Eye Institute",
+   "task": "Denial rework & resubmission",
+   "role": "Billing",
+   "hours_per_month": 34.0,
+   "cost_per_month": 953.0,
+   "events_13w": 254
+  },
+  {
+   "practice_id": "P07",
+   "practice": "Lakeview Eye Institute",
+   "task": "Fax & document indexing",
+   "role": "Front desk",
+   "hours_per_month": 21.0,
+   "cost_per_month": 461.0,
+   "events_13w": 961
+  },
+  {
+   "practice_id": "P07",
+   "practice": "Lakeview Eye Institute",
+   "task": "Manual eligibility verification",
+   "role": "Front desk",
+   "hours_per_month": 85.3,
+   "cost_per_month": 1877.0,
+   "events_13w": 2196
+  },
+  {
+   "practice_id": "P07",
+   "practice": "Lakeview Eye Institute",
+   "task": "Manual report assembly",
+   "role": "Admin",
+   "hours_per_month": 7.3,
+   "cost_per_month": 218.0,
+   "events_13w": 86
+  },
+  {
+   "practice_id": "P07",
+   "practice": "Lakeview Eye Institute",
+   "task": "No-show follow-up outreach",
+   "role": "Front desk",
+   "hours_per_month": 11.6,
+   "cost_per_month": 256.0,
+   "events_13w": 432
+  },
+  {
+   "practice_id": "P07",
+   "practice": "Lakeview Eye Institute",
+   "task": "Paper intake form transcription",
+   "role": "Front desk",
+   "hours_per_month": 39.6,
+   "cost_per_month": 871.0,
+   "events_13w": 785
+  },
+  {
+   "practice_id": "P07",
+   "practice": "Lakeview Eye Institute",
+   "task": "Patient billing questions",
+   "role": "Billing",
+   "hours_per_month": 37.9,
+   "cost_per_month": 1061.0,
+   "events_13w": 846
+  },
+  {
+   "practice_id": "P07",
+   "practice": "Lakeview Eye Institute",
+   "task": "Prescription refill requests",
+   "role": "Clinical staff",
+   "hours_per_month": 16.6,
+   "cost_per_month": 582.0,
+   "events_13w": 487
+  },
+  {
+   "practice_id": "P07",
+   "practice": "Lakeview Eye Institute",
+   "task": "Prior-auth requests & follow-up",
+   "role": "Billing",
+   "hours_per_month": 41.3,
+   "cost_per_month": 1156.0,
+   "events_13w": 344
+  },
+  {
+   "practice_id": "P07",
+   "practice": "Lakeview Eye Institute",
+   "task": "Referral coordination",
+   "role": "Clinical staff",
+   "hours_per_month": 18.5,
+   "cost_per_month": 649.0,
+   "events_13w": 334
+  },
+  {
+   "practice_id": "P07",
+   "practice": "Lakeview Eye Institute",
+   "task": "Reschedule / cancellation handling",
+   "role": "Front desk",
+   "hours_per_month": 19.3,
+   "cost_per_month": 425.0,
+   "events_13w": 700
+  },
+  {
+   "practice_id": "P08",
+   "practice": "Lakeview Retina Specialists",
+   "task": "Appointment scheduling calls",
+   "role": "Front desk",
+   "hours_per_month": 76.6,
+   "cost_per_month": 1685.0,
+   "events_13w": 2308
+  },
+  {
+   "practice_id": "P08",
+   "practice": "Lakeview Retina Specialists",
+   "task": "Denial rework & resubmission",
+   "role": "Billing",
+   "hours_per_month": 71.4,
+   "cost_per_month": 2000.0,
+   "events_13w": 500
+  },
+  {
+   "practice_id": "P08",
+   "practice": "Lakeview Retina Specialists",
+   "task": "Fax & document indexing",
+   "role": "Front desk",
+   "hours_per_month": 20.1,
+   "cost_per_month": 442.0,
+   "events_13w": 909
+  },
+  {
+   "practice_id": "P08",
+   "practice": "Lakeview Retina Specialists",
+   "task": "Manual eligibility verification",
+   "role": "Front desk",
+   "hours_per_month": 44.1,
+   "cost_per_month": 970.0,
+   "events_13w": 1148
+  },
+  {
+   "practice_id": "P08",
+   "practice": "Lakeview Retina Specialists",
+   "task": "Manual report assembly",
+   "role": "Admin",
+   "hours_per_month": 7.8,
+   "cost_per_month": 235.0,
+   "events_13w": 97
+  },
+  {
+   "practice_id": "P08",
+   "practice": "Lakeview Retina Specialists",
+   "task": "No-show follow-up outreach",
+   "role": "Front desk",
+   "hours_per_month": 10.5,
+   "cost_per_month": 231.0,
+   "events_13w": 395
+  },
+  {
+   "practice_id": "P08",
+   "practice": "Lakeview Retina Specialists",
+   "task": "Paper intake form transcription",
+   "role": "Front desk",
+   "hours_per_month": 40.7,
+   "cost_per_month": 896.0,
+   "events_13w": 819
+  },
+  {
+   "practice_id": "P08",
+   "practice": "Lakeview Retina Specialists",
+   "task": "Patient billing questions",
+   "role": "Billing",
+   "hours_per_month": 25.5,
+   "cost_per_month": 713.0,
+   "events_13w": 556
+  },
+  {
+   "practice_id": "P08",
+   "practice": "Lakeview Retina Specialists",
+   "task": "Prescription refill requests",
+   "role": "Clinical staff",
+   "hours_per_month": 16.4,
+   "cost_per_month": 575.0,
+   "events_13w": 496
+  },
+  {
+   "practice_id": "P08",
+   "practice": "Lakeview Retina Specialists",
+   "task": "Prior-auth requests & follow-up",
+   "role": "Billing",
+   "hours_per_month": 64.4,
+   "cost_per_month": 1804.0,
+   "events_13w": 532
+  },
+  {
+   "practice_id": "P08",
+   "practice": "Lakeview Retina Specialists",
+   "task": "Referral coordination",
+   "role": "Clinical staff",
+   "hours_per_month": 15.4,
+   "cost_per_month": 539.0,
+   "events_13w": 272
+  },
+  {
+   "practice_id": "P08",
+   "practice": "Lakeview Retina Specialists",
+   "task": "Reschedule / cancellation handling",
+   "role": "Front desk",
+   "hours_per_month": 20.1,
+   "cost_per_month": 441.0,
+   "events_13w": 715
+  }
+ ],
+ "weekly_trend": [
+  {
+   "week": 1,
+   "hours": 747.3
+  },
+  {
+   "week": 2,
+   "hours": 757.0
+  },
+  {
+   "week": 3,
+   "hours": 788.8
+  },
+  {
+   "week": 4,
+   "hours": 777.7
+  },
+  {
+   "week": 5,
+   "hours": 761.7
+  },
+  {
+   "week": 6,
+   "hours": 776.7
+  },
+  {
+   "week": 7,
+   "hours": 767.3
+  },
+  {
+   "week": 8,
+   "hours": 766.3
+  },
+  {
+   "week": 9,
+   "hours": 766.7
+  },
+  {
+   "week": 10,
+   "hours": 741.6
+  },
+  {
+   "week": 11,
+   "hours": 778.7
+  },
+  {
+   "week": 12,
+   "hours": 770.5
+  },
+  {
+   "week": 13,
+   "hours": 769.5
+  }
+ ],
+ "role_mix": [
+  {
+   "role": "Front desk",
+   "hours_per_month": 1895.3,
+   "cost_per_month": 41696.0
+  },
+  {
+   "role": "Billing",
+   "hours_per_month": 1080.4,
+   "cost_per_month": 30251.0
+  },
+  {
+   "role": "Clinical staff",
+   "hours_per_month": 280.7,
+   "cost_per_month": 9825.0
+  },
+  {
+   "role": "Admin",
+   "hours_per_month": 66.9,
+   "cost_per_month": 2007.0
+  }
+ ],
+ "sql": {
+  "by_task": "\n            -- Where do the hours go? One row per (practice, task).\n            SELECT t.practice_id, t.practice, t.task, t.role,\n                   -- minutes -> hours (/60), then 13 weeks -> per month (/3)\n                   ROUND(SUM(t.minutes)/60.0 / 3.0, 1)          AS hours_per_month,\n                   -- hours priced at the role's hourly rate from the roles table\n                   ROUND(SUM(t.minutes)/60.0 / 3.0 * r.hourly_usd) AS cost_per_month,\n                   SUM(t.events)                                 AS events_13w\n            FROM task_events t\n            JOIN roles r ON r.role = t.role   -- brings in hourly_usd per role\n            GROUP BY t.practice_id, t.task    -- practice+task grain: the app\n                                              -- re-aggregates client-side",
+  "weekly_trend": "\n            -- Is manual load stable, growing, or seasonal?\n            SELECT week, ROUND(SUM(minutes)/60.0, 1) AS hours\n            FROM task_events\n            GROUP BY week                     -- ISO week number, 1 to 13\n            ORDER BY week",
+  "role_mix": "\n            -- Which staff role absorbs the cost? Targets the automation pitch.\n            SELECT t.role, ROUND(SUM(t.minutes)/60.0 / 3.0, 1) AS hours_per_month,\n                   ROUND(SUM(t.minutes)/60.0 / 3.0 * r.hourly_usd) AS cost_per_month\n            FROM task_events t JOIN roles r ON r.role = t.role\n            GROUP BY t.role\n            ORDER BY hours_per_month DESC     -- biggest sink first"
+ },
+ "task_meta": {
+  "Appointment scheduling calls": {
+   "role": "Front desk",
+   "avg_minutes": 6,
+   "automatable": 0.7,
+   "recommendation": "Patient self-scheduling + AI front-office assistant for phone deflection",
+   "capability": "NewMed Front Office Assistant"
+  },
+  "Reschedule / cancellation handling": {
+   "role": "Front desk",
+   "avg_minutes": 5,
+   "automatable": 0.65,
+   "recommendation": "Automated waitlist backfill and self-service rescheduling",
+   "capability": "NewMed Front Office Assistant"
+  },
+  "Manual eligibility verification": {
+   "role": "Front desk",
+   "avg_minutes": 7,
+   "automatable": 0.85,
+   "recommendation": "Batch real-time 270/271 checks 48h pre-visit; exceptions-only review",
+   "capability": "NewMed Practice Management (eligibility automation)"
+  },
+  "Paper intake form transcription": {
+   "role": "Front desk",
+   "avg_minutes": 9,
+   "automatable": 0.9,
+   "recommendation": "Digital intake sent at booking; data flows straight to the chart",
+   "capability": "NewMed Patient Engagement (digital intake)"
+  },
+  "Fax & document indexing": {
+   "role": "Front desk",
+   "avg_minutes": 4,
+   "automatable": 0.75,
+   "recommendation": "AI document classification and auto-filing to patient record",
+   "capability": "NewMed platform (document AI)"
+  },
+  "No-show follow-up outreach": {
+   "role": "Front desk",
+   "avg_minutes": 5,
+   "automatable": 0.8,
+   "recommendation": "Automated reminder cadence + reactivation outreach",
+   "capability": "NewMed Patient Engagement"
+  },
+  "Prior-auth requests & follow-up": {
+   "role": "Billing",
+   "avg_minutes": 22,
+   "automatable": 0.6,
+   "recommendation": "Auto-assembled PA packets from chart data + payer status tracking",
+   "capability": "NewMed Billing tools (PA automation)"
+  },
+  "Denial rework & resubmission": {
+   "role": "Billing",
+   "avg_minutes": 25,
+   "automatable": 0.55,
+   "recommendation": "Pre-submission denial risk scoring (see Denial Prevention Co-Pilot)",
+   "capability": "Denial Prevention Co-Pilot"
+  },
+  "Patient billing questions": {
+   "role": "Billing",
+   "avg_minutes": 8,
+   "automatable": 0.5,
+   "recommendation": "Self-service statements + AI billing chat with human handoff",
+   "capability": "NewMed Patient Engagement + Pay"
+  },
+  "Referral coordination": {
+   "role": "Clinical staff",
+   "avg_minutes": 10,
+   "automatable": 0.45,
+   "recommendation": "Structured e-referral workflow with status visibility",
+   "capability": "NewMed interoperability (API platform)"
+  },
+  "Prescription refill requests": {
+   "role": "Clinical staff",
+   "avg_minutes": 6,
+   "automatable": 0.65,
+   "recommendation": "Protocol-based refill triage; clinician reviews exceptions",
+   "capability": "NewMed Clinical Assistant"
+  },
+  "Manual report assembly": {
+   "role": "Admin",
+   "avg_minutes": 15,
+   "automatable": 0.85,
+   "recommendation": "Scheduled analytics dashboards replace hand-built spreadsheets",
+   "capability": "NewMed Analytics"
+  }
+ },
+ "roles": {
+  "Front desk": 22,
+  "Billing": 28,
+  "Clinical staff": 35,
+  "Admin": 30
+ },
+ "practices": [
+  {
+   "id": "P01",
+   "name": "Lakeview Dermatology - Downtown"
+  },
+  {
+   "id": "P02",
+   "name": "Lakeview Dermatology - Northside"
+  },
+  {
+   "id": "P03",
+   "name": "Lakeview GI Associates"
+  },
+  {
+   "id": "P04",
+   "name": "Lakeview Endoscopy Center"
+  },
+  {
+   "id": "P05",
+   "name": "Lakeview Orthopedics - Main"
+  },
+  {
+   "id": "P06",
+   "name": "Lakeview Sports Medicine"
+  },
+  {
+   "id": "P07",
+   "name": "Lakeview Eye Institute"
+  },
+  {
+   "id": "P08",
+   "name": "Lakeview Retina Specialists"
+  }
+ ]
+}

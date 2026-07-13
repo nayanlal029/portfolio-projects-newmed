@@ -1,0 +1,84 @@
+{
+ "model": "logistic_regression_pure_python",
+ "trained": "2026-07-13",
+ "train_window": "2026-01-01..2026-04-30",
+ "test_window": "2026-05-01..2026-06-30",
+ "features": [
+  {
+   "name": "pa_gap",
+   "label": "Prior authorization required but not on file",
+   "weight": 2.4196
+  },
+  {
+   "name": "elig_gap",
+   "label": "Eligibility unverified or verification stale (>60 days)",
+   "weight": 2.0515
+  },
+  {
+   "name": "mod_gap",
+   "label": "Required modifier missing from claim line",
+   "weight": 1.1838
+  },
+  {
+   "name": "missing_fields",
+   "label": "Claim record has missing/incomplete fields",
+   "weight": 1.3145
+  },
+  {
+   "name": "timely_exceeded",
+   "label": "Already past this payer's timely-filing limit",
+   "weight": 0.9175
+  },
+  {
+   "name": "timely_near",
+   "label": "Within 20% of this payer's timely-filing limit",
+   "weight": 0.0004
+  },
+  {
+   "name": "resubmission",
+   "label": "This is a resubmission of a prior claim",
+   "weight": 0.3773
+  },
+  {
+   "name": "high_charge",
+   "label": "High-dollar claim (charge > $1,000)",
+   "weight": 0.4649
+  },
+  {
+   "name": "payer_medicaid",
+   "label": "Payer: Medicaid (highest eligibility churn)",
+   "weight": 0.3541
+  },
+  {
+   "name": "payer_unityhealth",
+   "label": "Payer: UnityHealth (strictest prior-auth policy)",
+   "weight": -0.1875
+  },
+  {
+   "name": "payer_medicare",
+   "label": "Payer: Medicare",
+   "weight": -0.6039
+  },
+  {
+   "name": "payer_blueshield",
+   "label": "Payer: BlueShield Plus",
+   "weight": -0.367
+  },
+  {
+   "name": "spec_gi",
+   "label": "Specialty: Gastroenterology",
+   "weight": -0.3084
+  },
+  {
+   "name": "spec_ortho",
+   "label": "Specialty: Orthopedics",
+   "weight": -0.2091
+  },
+  {
+   "name": "spec_ophth",
+   "label": "Specialty: Ophthalmology",
+   "weight": -0.2716
+  }
+ ],
+ "bias": -2.3835
+}

@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NewMed · Denial Prevention Co-Pilot</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface: #fcfcfb; --plane: #f4f4f1;
+    --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+    --grid: #e1e0d9; --baseline: #c3c2b7; --ring: rgba(11,11,11,0.10);
+    --blue: #2a78d6; --blue-deep: #1c5cab; --blue-100: #cde2fb; --blue-250: #86b6ef;
+    --aqua: #1baf7a; --violet: #4a3aa7;
+    --good: #0ca30c; --good-text: #006300; --warn: #fab219; --serious: #ec835a; --critical: #d03b3b;
+    --radius: 10px;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--plane); color: var(--ink); font-size: 15px; line-height: 1.55; }
+
+  header { background: linear-gradient(120deg, #0d366b, #1c5cab 55%, #256abf); color: #fff; padding: 24px 32px 0; }
+  .shell { max-width: 1460px; margin: 0 auto; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand .mark { width: 40px; height: 40px; border-radius: 10px; background: #fff; display: grid; place-items: center; flex: none; }
+  .brand h1 { font-size: 21px; font-weight: 650; letter-spacing: -0.2px; }
+  .brand h1 span { opacity: 0.75; font-weight: 450; }
+  .tagline { margin: 8px 0 0 52px; font-size: 13.5px; opacity: 0.85; max-width: 780px; }
+  .synth { display: inline-block; margin-left: 10px; padding: 2px 9px; border-radius: 999px; background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.35); font-size: 11px; letter-spacing: 0.06em; vertical-align: 2px; }
+  nav { display: flex; gap: 4px; margin: 18px 0 0 44px; flex-wrap: wrap; }
+  nav button { border: 0; background: transparent; color: rgba(255,255,255,0.75); padding: 10px 16px 12px; font-size: 14px; font-weight: 550; cursor: pointer; border-radius: 8px 8px 0 0; font-family: inherit; }
+  nav button:hover { color: #fff; background: rgba(255,255,255,0.08); }
+  nav button.active { background: var(--plane); color: var(--blue-deep); }
+
+  main { max-width: 1460px; margin: 0 auto; padding: 24px 32px 60px; }
+  section.tab { display: none; }
+  section.tab.active { display: block; }
+  h2 { font-size: 19px; margin: 4px 0 4px; letter-spacing: -0.2px; }
+  h3 { font-size: 15.5px; margin-bottom: 4px; }
+  .lede { color: var(--ink-2); max-width: 900px; margin-bottom: 18px; font-size: 14.5px; }
+  a.softlink { color: var(--blue-deep); text-decoration: underline; cursor: pointer; }
+
+  .card { background: var(--surface); border: 1px solid var(--ring); border-radius: var(--radius); padding: 18px 20px; }
+
+  /* flow ribbon (top of tab 1) */
+  .ribbon { display: flex; align-items: stretch; gap: 0; overflow-x: auto; padding: 6px 2px 10px; margin-bottom: 18px; -webkit-overflow-scrolling: touch; }
+  .rstep { flex: 1 0 auto; min-width: 118px; display: flex; align-items: center; }
+  .rstep .box { background: var(--surface); border: 1px solid var(--ring); border-radius: 8px; padding: 8px 10px; font-size: 12px; line-height: 1.3; width: 100%; cursor: pointer; }
+  .rstep .box b { display: block; font-size: 11px; color: var(--muted); font-weight: 650; }
+  .rstep .arrow { color: var(--baseline); font-size: 15px; padding: 0 4px; flex: none; }
+  .rstep .box.hot { border: 2px solid var(--blue); box-shadow: 0 3px 10px rgba(42,120,214,0.2); }
+  .rstep .box.hot b { color: var(--blue-deep); }
+
+  /* filters */
+  .filterbar { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+  .filterbar .fgroup { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .filterbar .flabel { font-size: 12px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .filterbar button { border: 1px solid var(--baseline); background: var(--surface); border-radius: 999px; padding: 5px 13px; font-size: 12.5px; cursor: pointer; font-family: inherit; color: var(--ink-2); }
+  .filterbar button:hover { border-color: var(--blue); color: var(--blue-deep); }
+  .filterbar button.on { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 600; }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 24px; }
+  .tile { cursor: default; }
+  .tile .label { font-size: 12.5px; color: var(--muted); font-weight: 550; letter-spacing: 0.02em; border-bottom: 1px dotted var(--baseline); display: inline-block; }
+  .tile .value { font-size: 29px; font-weight: 650; letter-spacing: -0.5px; margin: 2px 0; font-variant-numeric: tabular-nums; transition: opacity 0.2s; }
+  .tile .note { font-size: 12.5px; color: var(--ink-2); }
+  .tile .value.bad { color: var(--critical); }
+  .tile .value.ok { color: var(--good-text); }
+
+  .qblock { margin-bottom: 26px; }
+  .qblock .question { font-size: 13px; font-weight: 600; color: var(--blue-deep); text-transform: uppercase; letter-spacing: 0.05em; }
+  .qblock .takeaway { background: var(--blue-100); border-left: 3px solid var(--blue); border-radius: 6px; padding: 10px 14px; margin-top: 12px; font-size: 14px; }
+  details.sql { margin-top: 10px; }
+  details.sql summary { cursor: pointer; font-size: 13px; color: var(--ink-2); font-weight: 550; }
+  details.sql summary:hover { color: var(--blue-deep); }
+  details.sql .sqlnote { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  pre.sql { background: #10243d; color: #cde2fb; border-radius: 8px; padding: 14px 16px; overflow-x: auto; font-size: 12.5px; line-height: 1.5; margin-top: 8px; }
+  pre.sql .c { color: #7fa3cc; }
+  table.result { border-collapse: collapse; margin-top: 10px; font-size: 13px; width: 100%; }
+  table.result th { text-align: left; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--baseline); padding: 5px 10px 5px 0; }
+  table.result td { border-bottom: 1px solid var(--grid); padding: 5px 10px 5px 0; font-variant-numeric: tabular-nums; }
+  .chart-wrap { margin-top: 12px; overflow-x: auto; }
+  svg text { font-family: inherit; }
+  .bar-hit:hover rect.bar { opacity: 0.82; }
+
+  /* lifecycle flow */
+  .flowscroll { overflow-x: auto; padding: 10px 2px 2px; -webkit-overflow-scrolling: touch; }
+  .flow { min-width: 980px; }
+  .phases { display: flex; gap: 10px; margin-bottom: 6px; }
+  .phase-label { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 4px 10px; border-radius: 6px 6px 0 0; color: #fff; text-align: center; }
+  .nodes { display: flex; align-items: stretch; gap: 0; }
+  .fnode { flex: 1; display: flex; align-items: stretch; }
+  .fnode .nbox { background: var(--surface); border: 1.5px solid var(--ring); border-radius: 10px; padding: 10px 11px 9px; width: 100%; position: relative; cursor: default; transition: transform 0.15s, box-shadow 0.15s; }
+  .fnode .nbox:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(11,11,11,0.10); }
+  .fnode .nnum { width: 22px; height: 22px; border-radius: 50%; color: #fff; display: grid; place-items: center; font-size: 11.5px; font-weight: 700; margin-bottom: 6px; }
+  .fnode .ntitle { font-size: 12.5px; font-weight: 650; line-height: 1.25; }
+  .fnode .nsub { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.3; }
+  .fnode .farrow { display: grid; place-items: center; color: var(--baseline); font-size: 17px; padding: 0 3px; flex: none; }
+  .fnode .nbox.copilot { border: 2.5px solid var(--blue); box-shadow: 0 6px 18px rgba(42,120,214,0.25); }
+  .fnode .nbox.badged { padding-top: 18px; }
+  .fnode .badge { position: absolute; top: -12px; left: 8px; right: 8px; text-align: center; font-size: 9.5px; font-weight: 750; letter-spacing: 0.04em; background: var(--blue); color: #fff; border-radius: 999px; padding: 2px 4px; }
+  .fnode .badge.gray { background: var(--ink-2); }
+  .shiftband { position: relative; height: 74px; min-width: 980px; }
+  .anno { display: flex; min-width: 980px; margin-top: 4px; gap: 10px; }
+  .anno div { font-size: 11.5px; padding: 6px 10px; border-radius: 7px; text-align: center; font-weight: 600; }
+  .stage-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 22px; }
+  .stage-cards .sc { padding: 12px 14px; }
+  .stage-cards .sc h4 { font-size: 13px; margin-bottom: 3px; }
+  .stage-cards .sc h4 i { font-style: normal; color: var(--muted); font-weight: 700; margin-right: 5px; }
+  .stage-cards .sc p { font-size: 12px; color: var(--ink-2); }
+  .shift-note { background: var(--blue-100); border-radius: var(--radius); padding: 14px 18px; font-size: 14px; margin-top: 18px; }
+
+  /* queue */
+  .howto { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .howto .step { background: var(--surface); border: 1px solid var(--ring); border-radius: 999px; padding: 6px 14px; font-size: 12.5px; color: var(--ink-2); }
+  .howto .step b { color: var(--blue-deep); margin-right: 4px; }
+  .queue-layout { display: grid; grid-template-columns: minmax(430px, 1fr) minmax(380px, 0.95fr); gap: 18px; align-items: start; }
+  .session-bar { display: flex; gap: 22px; margin-bottom: 14px; flex-wrap: wrap; }
+  .session-bar .stat b { font-size: 20px; font-variant-numeric: tabular-nums; }
+  .session-bar .stat span { display: block; font-size: 12px; color: var(--muted); border-bottom: 1px dotted var(--baseline); }
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table.queue { border-collapse: collapse; width: 100%; font-size: 13px; }
+  table.queue th { text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--baseline); }
+  table.queue td { padding: 8px; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  table.queue tr.row { cursor: pointer; }
+  table.queue tr.row:hover { background: #f1f5fb; }
+  table.queue tr.row.sel { background: var(--blue-100); }
+  table.queue tr.row.done { opacity: 0.55; }
+  .risk-pill { display: inline-block; min-width: 52px; text-align: center; padding: 2px 8px; border-radius: 999px; font-weight: 650; font-size: 12px; color: #fff; }
+  .chip { display: inline-block; font-size: 11px; font-weight: 650; padding: 2px 8px; border-radius: 999px; background: var(--grid); color: var(--ink-2); }
+  .detail h3 { font-size: 16px; }
+  .detail .meta { font-size: 13px; color: var(--ink-2); margin: 2px 0 12px; }
+  .gauge-row { display: flex; align-items: center; gap: 14px; margin: 10px 0 16px; }
+  .gauge-num { font-size: 34px; font-weight: 700; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+  .gauge-track { flex: 1; height: 10px; border-radius: 999px; background: var(--grid); overflow: hidden; }
+  .gauge-fill { height: 100%; border-radius: 999px; transition: width 0.5s ease, background 0.5s ease; }
+  .factor { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--grid); font-size: 13px; }
+  .factor .fbar { width: 90px; height: 7px; background: var(--grid); border-radius: 999px; overflow: hidden; flex: none; }
+  .factor .fbar i { display: block; height: 100%; background: var(--serious); border-radius: 999px; }
+  .factor.protective .fbar i { background: var(--good); }
+  .predbox { background: #fdf3ef; border-left: 3px solid var(--serious); border-radius: 6px; padding: 10px 14px; margin: 14px 0; font-size: 13.5px; }
+  .fixbox { border: 1px dashed var(--baseline); border-radius: 8px; padding: 12px 14px; margin-top: 10px; }
+  .fixbox .fix-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 6px 0; }
+  .appliedbox { border: 1px solid var(--grid); background: #f2f8f2; border-radius: 8px; padding: 10px 14px; margin-top: 10px; }
+  .appliedbox .fix-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 5px 0; font-size: 13px; }
+  button.apply { background: var(--blue); color: #fff; border: 0; border-radius: 7px; padding: 7px 14px; font-weight: 600; font-size: 13px; cursor: pointer; font-family: inherit; flex: none; }
+  button.apply:hover { background: var(--blue-deep); }
+  button.ghost { background: transparent; border: 1px solid var(--baseline); border-radius: 7px; padding: 6px 12px; font-size: 12.5px; cursor: pointer; color: var(--ink-2); font-family: inherit; flex: none; }
+  button.ghost:hover { border-color: var(--ink-2); }
+  .delta-flash { font-weight: 700; color: var(--good-text); }
+  .truth { margin-top: 14px; font-size: 12.5px; color: var(--muted); }
+  .truth button { background: none; border: none; color: var(--blue-deep); cursor: pointer; font-size: 12.5px; padding: 0; text-decoration: underline; font-family: inherit; }
+  .feedback-note { margin-top: 12px; font-size: 12.5px; color: var(--ink-2); background: var(--plane); border-radius: 6px; padding: 8px 12px; }
+
+  /* evals */
+  input[type=range] { width: 100%; accent-color: var(--blue); }
+  .eval-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 14px 0; }
+  .cm { display: grid; grid-template-columns: 110px 1fr 1fr; gap: 6px; max-width: 480px; font-size: 13px; margin-top: 8px; }
+  .cm .cell { border-radius: 8px; padding: 12px; text-align: center; }
+  .cm .hd { color: var(--muted); font-weight: 600; display: grid; place-items: center; text-align: right; }
+  .cm b { display: block; font-size: 20px; font-variant-numeric: tabular-nums; }
+  #eval-lower { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+  .plan { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; margin-top: 14px; }
+  .plan .phase { border-top: 3px solid var(--blue); }
+  .plan .phase h4 { font-size: 14px; margin-bottom: 6px; }
+  .plan .phase ul { padding-left: 18px; font-size: 13px; color: var(--ink-2); }
+  ul.risks { padding-left: 20px; font-size: 13.5px; }
+  ul.risks li { margin-bottom: 8px; }
+
+  /* glossary */
+  .gloss { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+  .gloss .term h4 { font-size: 14.5px; color: var(--blue-deep); }
+  .gloss .term p { font-size: 13px; color: var(--ink-2); margin-top: 4px; }
+  .gloss .term .why { margin-top: 8px; font-size: 12.5px; color: var(--ink); background: var(--plane); border-radius: 6px; padding: 7px 10px; }
+
+  footer { text-align: center; color: var(--muted); font-size: 12.5px; padding: 18px; }
+  footer a { color: var(--blue-deep); }
+  #tooltip { position: fixed; pointer-events: none; background: var(--ink); color: #fff; font-size: 12.5px; padding: 7px 11px; border-radius: 6px; opacity: 0; transition: opacity 0.12s; z-index: 50; max-width: 290px; line-height: 1.4; }
+
+  @media (max-width: 1200px) { #eval-lower { grid-template-columns: 1fr; } }
+  @media (max-width: 900px) { .queue-layout { grid-template-columns: 1fr; } .stage-cards { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 640px) {
+    body { font-size: 14px; }
+    header { padding: 16px 14px 0; }
+    .brand .mark { width: 34px; height: 34px; }
+    .brand h1 { font-size: 17px; }
+    .tagline { margin-left: 0; font-size: 12.5px; }
+    nav { margin-left: 0; gap: 2px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+    nav::-webkit-scrollbar { display: none; }
+    nav button { padding: 9px 11px 11px; font-size: 12.5px; white-space: nowrap; }
+    main { padding: 18px 14px 48px; }
+    h2 { font-size: 17px; }
+    .tile .value { font-size: 24px; }
+    .card { padding: 14px 14px; }
+    pre.sql { font-size: 11.5px; }
+    table.queue th, table.queue td { padding: 6px 6px; font-size: 12.5px; }
+    .gauge-num { font-size: 28px; }
+    .cm { grid-template-columns: 84px 1fr 1fr; font-size: 12px; max-width: none; }
+    .cm b { font-size: 17px; }
+    .session-bar { gap: 14px; }
+    .session-bar .stat b { font-size: 17px; }
+  }
+  @media (max-width: 560px) { .stage-cards { grid-template-columns: 1fr; } .gloss { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="shell">
+    <div class="brand">
+      <div class="mark">
+        <svg width="24" height="24" viewBox="0 0 24 24" aria-label="NewMed">
+          <rect x="9.2" y="2.5" width="5.6" height="19" rx="2.4" fill="#1c5cab"/>
+          <rect x="2.5" y="9.2" width="19" height="5.6" rx="2.4" fill="#1c5cab"/>
+          <rect x="9.2" y="9.2" width="5.6" height="5.6" fill="#2a78d6"/>
+        </svg>
+      </div>
+      <h1>NewMed <span>· Denial Prevention Co-Pilot</span></h1>
+    </div>
+    <p class="tagline">Score every claim for denial risk <b>before</b> it leaves the practice: predicted reason, suggested fix, biller in the loop.
+      <span class="synth">SYNTHETIC DATA · PROTOTYPE</span></p>
+    <nav id="nav">
+      <button data-tab="problem" class="active">1 · Why build this</button>
+      <button data-tab="lifecycle">2 · Claim lifecycle</button>
+      <button data-tab="copilot">3 · Co-Pilot queue</button>
+      <button data-tab="evals">4 · Evals &amp; rollout</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- ======================= TAB 1 : PROBLEM ======================= -->
+  <section class="tab active" id="tab-problem">
+    <div class="ribbon" id="ribbon"></div>
+    <h2>The SQL trail that justified the build</h2>
+    <p class="lede">Before proposing anything, I profiled six months of claims (Jan to Jun 2026) for <b>Lakeview Specialty Partners</b>, a synthetic 8-practice, 4-specialty group on the NewMed platform, directly in the claims warehouse. Each block below is one product question, the query, the actual result, and what it changed about the decision. Use the filters to slice everything by payer or specialty; expand any block to see the commented SQL. New to the vocabulary? There is a <a class="softlink" onclick="showTab('glossary')">plain-English glossary</a>.</p>
+    <div class="filterbar" id="filterbar"></div>
+    <div class="tiles" id="kpi-tiles"></div>
+    <div id="qblocks"></div>
+  </section>
+
+  <!-- ======================= TAB 2 : LIFECYCLE ======================= -->
+  <section class="tab" id="tab-lifecycle">
+    <h2>Where the Co-Pilot sits in the revenue cycle</h2>
+    <p class="lede">Revenue Cycle Management (RCM) is the pipeline from "patient books a visit" to "practice gets paid". The flow below is the whole cycle. Hover any step for the plain-English version. The structural problem: denials are <b>born</b> in steps 1 to 5, but only <b>discovered</b> at step 6, weeks later, and <b>worked</b> at step 7 when the fix is most expensive.</p>
+    <div class="card" style="padding:22px 20px 16px">
+      <div class="flowscroll"><div class="flow" id="flow"></div></div>
+    </div>
+    <div class="stage-cards" id="stage-cards"></div>
+    <div class="shift-note">
+      <b>The shift-left argument:</b> NewMed's 2026 <b>Billing Assistant</b> helps billers work denials at step 7, after the payer has already said no, the cash is already stalled, and $25 to $118 of rework per claim is already committed. The cheapest denial is the one that never goes out wrong. The same payer-pattern intelligence, applied at step 5, prevents the denial instead of curing it. The two products share one data moat and one feedback loop: every step-7 resolution teaches the step-5 model.
+    </div>
+  </section>
+
+  <!-- ======================= TAB 3 : CO-PILOT ======================= -->
+  <section class="tab" id="tab-copilot">
+    <h2>Pre-submission queue: the working product</h2>
+    <div class="howto">
+      <span class="step"><b>1</b> Queue is scored live by the model</span>
+      <span class="step"><b>2</b> Click a claim to see why it is risky</span>
+      <span class="step"><b>3</b> Apply the one-click fix, undo it, or override</span>
+      <span class="step"><b>4</b> Every action feeds back into training</span>
+    </div>
+    <p class="lede">This is the biller's 8:30 AM view: today's claims scored <b>live in your browser</b> by the trained model (open the console: it is a 15-weight logistic model, fully auditable). The AI recommends; the biller decides.</p>
+    <div class="session-bar card" style="padding:12px 20px">
+      <div class="stat"><b id="s-reviewed">0</b><span data-tip="Claims you have opened this session.">claims reviewed</span></div>
+      <div class="stat"><b id="s-fixed">0</b><span data-tip="Suggested fixes applied. Each one is also a labeled training example.">fixes applied</span></div>
+      <div class="stat"><b id="s-protected">$0</b><span data-tip="Estimated value protected: avoided rework labour plus write-off revenue preserved, weighted by how much the risk score dropped.">est. value protected</span></div>
+      <div class="stat"><b id="s-overridden">0</b><span data-tip="Times the biller disagreed and submitted as-is. Overrides are training data, not failures.">overrides (fed back)</span></div>
+    </div>
+    <div class="queue-layout">
+      <div class="card" style="padding:10px 14px">
+        <div class="table-scroll">
+        <table class="queue">
+          <thead><tr><th>Risk</th><th>Claim</th><th>Payer</th><th>Procedure</th><th style="text-align:right">Charge</th></tr></thead>
+          <tbody id="queue-body"></tbody>
+        </table>
+        </div>
+      </div>
+      <div class="card detail" id="detail"><p style="color:var(--muted);padding:30px 10px;text-align:center">Select a claim from the queue.</p></div>
+    </div>
+  </section>
+
+  <!-- ======================= TAB 4 : EVALS ======================= -->
+  <section class="tab" id="tab-evals">
+    <h2>How I know it works, and how it would roll out</h2>
+    <p class="lede">Evaluated by <b>temporal backtest</b>: trained on Jan to Apr claims, tested on May to Jun claims it never saw. That simulates deployment order; a random split would leak future payer behaviour into training and flatter the numbers. The operating threshold is a <b>product decision</b>, not a data-science decision: it trades biller review workload against denials caught. Drag the slider.</p>
+    <div class="tiles" id="eval-tiles"></div>
+    <div class="card" style="margin-bottom:18px">
+      <h3>Operating threshold: flag claims above <span id="t-label" style="color:var(--blue-deep)">30%</span> predicted risk</h3>
+      <input type="range" id="t-slider" min="0" max="46" value="14">
+      <div class="eval-grid" id="eval-grid"></div>
+      <div id="eval-lower">
+        <div><h3 style="margin-top:8px">Confusion matrix (test window)</h3><div class="cm" id="cm"></div></div>
+        <div><h3 style="margin-top:8px">Precision / recall / flag-rate vs threshold</h3><div class="chart-wrap" id="pr-chart"></div></div>
+      </div>
+      <p style="font-size:12.5px;color:var(--muted);margin-top:10px" id="econ-note"></p>
+    </div>
+    <div class="card" style="margin-bottom:18px">
+      <h3>Gated rollout: trust is earned in stages</h3>
+      <div class="plan">
+        <div class="card phase"><h4>0 · Offline backtest</h4><ul><li>Would we have predicted last quarter's denials? (this page)</li><li>Per-payer calibration review</li><li>Ship gate: AUC &gt; 0.80, per-payer recall floor</li></ul></div>
+        <div class="card phase"><h4>1 · Gated alpha</h4><ul><li>3 to 5 practices, one specialty, payer-heavy region</li><li>100% human review of every flag</li><li>Weekly calibration vs actual remits (835s)</li></ul></div>
+        <div class="card phase"><h4>2 · Expand</h4><ul><li>Add payers before adding specialties</li><li>Fix-suggestion acceptance rate &gt; 60%</li><li>Override rate &lt; 20% and falling</li></ul></div>
+        <div class="card phase"><h4>3 · GA</h4><ul><li>Clean-claim-rate lift vs matched control practices</li><li>In-product ROI reporting per practice</li><li>Continuous retraining on new 835 outcomes</li></ul></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Risks I would manage from day one</h3>
+      <ul class="risks">
+        <li><b>Payer rule drift</b>: payers change edits quarterly. Mitigation: monitor per-payer precision weekly; retraining trigger when calibration error exceeds a set band; the 835 remittance stream is the free, continuous label source.</li>
+        <li><b>Automation bias</b>: billers rubber-stamping suggestions. Mitigation: sampled mandatory manual review (for example 5% of accepted fixes), and the override button is one click, never buried.</li>
+        <li><b>False-positive fatigue</b>: every wasted review erodes trust, exactly like a false churn flag. Mitigation: the threshold slider above is a per-practice setting tied to biller capacity, not a global constant.</li>
+        <li><b>PHI / HIPAA</b>: features are claim-metadata level; any deployment needs BAA coverage, minimum-necessary access, and audit logging. Named here because it shapes architecture, not as an afterthought.</li>
+        <li><b>Cold start for small specialties</b>: fall back to cross-specialty payer patterns until practice-level volume accrues.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ======================= GLOSSARY (reachable via links, not main nav) ======================= -->
+  <section class="tab" id="tab-glossary">
+    <h2>The vocabulary, in plain English</h2>
+    <p class="lede">Healthcare billing has its own language. Every term this prototype uses, explained the way I would explain it to a new engineer on the team, plus why it matters to this product. <a class="softlink" onclick="showTab('problem')">Back to the analysis</a>.</p>
+    <div class="gloss" id="gloss"></div>
+  </section>
+</main>
+<footer>NewMed Denial Prevention Co-Pilot · product prototype by Nayan Lal · all data synthetic (<code>data/generate_claims.py</code>), no real patient or payer data · <a class="softlink" onclick="showTab('glossary')">billing glossary</a></footer>
+<div id="tooltip"></div>
+
+<script>
+const $ = (s, el=document) => el.querySelector(s);
+const fmt$ = n => '$' + Math.round(n).toLocaleString('en-US');
+const pct = n => (n*100).toFixed(0) + '%';
+const pct1 = n => (n*100).toFixed(1) + '%';
+
+/* ---------------- tabs ---------------- */
+function showTab(name) {
+  document.querySelectorAll('#nav button').forEach(x => x.classList.toggle('active', x.dataset.tab === name));
+  document.querySelectorAll('section.tab').forEach(s => s.classList.toggle('active', s.id === 'tab-'+name));
+  window.scrollTo({top: 0});
+  redrawAll();
+}
+$('#nav').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return; showTab(b.dataset.tab);
+});
+
+/* ---------------- tooltip ---------------- */
+const tip = $('#tooltip');
+function bindTips(root) {
+  root.querySelectorAll('[data-tip]').forEach(el => {
+    el.addEventListener('mousemove', e => {
+      tip.textContent = el.dataset.tip; tip.style.opacity = 1;
+      tip.style.left = Math.min(e.clientX+14, innerWidth-300)+'px'; tip.style.top = (e.clientY+14)+'px';
+    });
+    el.addEventListener('mouseleave', () => tip.style.opacity = 0);
+  });
+}
+document.addEventListener('DOMContentLoaded', () => bindTips(document));
+
+/* ---------------- responsive chart registry ---------------- */
+const REDRAWS = [];
+function reg(fn) { REDRAWS.push(fn); fn(); }
+function redrawAll() { REDRAWS.forEach(f => { try { f(); } catch (e) { console.error('redraw', e); } }); }
+let rT; window.addEventListener('resize', () => { clearTimeout(rT); rT = setTimeout(redrawAll, 160); });
+function chartWidth(el, min=340, max=1280) {
+  const w = el.clientWidth || el.parentElement.clientWidth || 0;
+  return w > 60 ? Math.max(min, Math.min(max, w)) : 0;
+}
+function wrapLabel(text, maxChars) {
+  if (text.length <= maxChars) return [text];
+  const mid = Math.floor(text.length / 2);
+  let cut = -1;
+  for (let i = 0; i < text.length; i++) if (text[i] === ' ' && Math.abs(i-mid) < Math.abs(cut-mid)) cut = i;
+  if (cut < 0) return [text.slice(0, maxChars-1) + '…'];
+  let l2 = text.slice(cut+1);
+  if (l2.length > maxChars) l2 = l2.slice(0, maxChars-1) + '…';
+  return [text.slice(0, cut), l2];
+}
+
+/* ---------------- SVG chart helpers ---------------- */
+function hbar(el, rows, {valKey, labelKey, max=null, fmt=(v)=>v, color=()=>'var(--blue)', tipFn=null}) {
+  const W = chartWidth(el); if (!W) { el.innerHTML=''; return; }
+  const bh=26, gap=10;
+  const lw = Math.max(120, Math.min(250, W*0.28));
+  const maxChars = Math.floor(lw/6.6);
+  const m = Math.max(...rows.map(r=>r[valKey]), 0.001), M = max || m*1.12;
+  const h = rows.length*(bh+gap);
+  let s = `<svg width="${W}" height="${h}" role="img">`;
+  rows.forEach((r,i)=>{
+    const y=i*(bh+gap), bw=Math.max(3,(r[valKey]/M)*(W-lw-70));
+    const lines = wrapLabel(String(r[labelKey]), maxChars);
+    const ltxt = lines.length===1
+      ? `<text x="${lw-8}" y="${y+bh/2+4}" text-anchor="end" font-size="12.5" fill="var(--ink-2)">${lines[0]}</text>`
+      : `<text x="${lw-8}" y="${y+bh/2-2}" text-anchor="end" font-size="11.5" fill="var(--ink-2)">${lines[0]}<tspan x="${lw-8}" dy="12">${lines[1]}</tspan></text>`;
+    s += `<g class="bar-hit" data-tip="${tipFn?tipFn(r):''}">${ltxt}
+      <rect class="bar" x="${lw}" y="${y}" width="${bw}" height="${bh}" rx="4" fill="${color(r)}"></rect>
+      <text x="${lw+bw+8}" y="${y+bh/2+4}" font-size="12.5" font-weight="600" fill="var(--ink)">${fmt(r[valKey])}</text></g>`;
+  });
+  el.innerHTML = s+'</svg>'; bindTips(el);
+}
+function lineChart(el, series, {height=230, ymax=null, yfmt=v=>v, xlabels, marker=null}) {
+  const W = chartWidth(el, 320, 1100); if (!W) { el.innerHTML=''; return; }
+  const padL=46, padR=16, padT=14, padB=26, IW=W-padL-padR, H=height-padT-padB;
+  const n = series[0].data.length;
+  const M = ymax || Math.max(...series.flatMap(s=>s.data))*1.15;
+  const X = i => padL + (n===1?IW/2:i*IW/(n-1)), Y = v => padT + H - (v/M)*H;
+  let s = `<svg width="${W}" height="${height}">`;
+  for (let g=0; g<=4; g++){ const v=M*g/4;
+    s += `<line x1="${padL}" y1="${Y(v)}" x2="${W-padR}" y2="${Y(v)}" stroke="var(--grid)"/>
+          <text x="${padL-6}" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="var(--muted)">${yfmt(v)}</text>`; }
+  if (marker!==null) s += `<line x1="${X(marker)}" y1="${padT}" x2="${X(marker)}" y2="${padT+H}" stroke="var(--baseline)" stroke-dasharray="4 3"/>`;
+  series.forEach(sr=>{
+    const pts = sr.data.map((v,i)=>`${X(i)},${Y(v)}`).join(' ');
+    s += `<polyline points="${pts}" fill="none" stroke="${sr.color}" stroke-width="2"/>`;
+    sr.data.forEach((v,i)=>{ s += `<circle cx="${X(i)}" cy="${Y(v)}" r="3.5" fill="${sr.color}" data-tip="${sr.name}: ${yfmt(v)} (${xlabels[i]})"/>`; });
+    const li = sr.labelAt!=null ? sr.labelAt : sr.data.length-1;
+    s += `<text x="${Math.min(X(li)+7, W-70)}" y="${Y(sr.data[li])+(sr.dy||-8)}" font-size="11.5" font-weight="650" fill="${sr.color}">${sr.name}</text>`;
+  });
+  xlabels.forEach((l,i)=>{ if (n<=8 || i%Math.ceil(n/8)===0) s+=`<text x="${X(i)}" y="${height-8}" text-anchor="middle" font-size="11" fill="var(--muted)">${l}</text>`; });
+  el.innerHTML = s+'</svg>'; bindTips(el);
+}
+function resultTable(rows, cols) {
+  if (!rows.length) return '';
+  const keys = cols || Object.keys(rows[0]);
+  return `<table class="result"><thead><tr>${keys.map(k=>`<th>${k}</th>`).join('')}</tr></thead><tbody>` +
+    rows.map(r=>`<tr>${keys.map(k=>`<td>${r[k]===null?'-':(typeof r[k]==='number'?r[k].toLocaleString('en-US'):r[k])}</td>`).join('')}</tr>`).join('') + '</tbody></table>';
+}
+function sqlHtml(sql) {
+  return sql.replace(/</g,'&lt;').replace(/(--[^\n]*)/g, '<span class="c">$1</span>');
+}
+
+/* ---------------- load data ---------------- */
+Promise.all(['data/discovery.json','data/model.json','data/evals.json','data/queue.json'].map(u=>fetch(u).then(r=>r.json())))
+.then(([D, MODEL, EV, QUEUE]) => {
+  window.MODEL = MODEL; console.log('Denial-risk model (auditable):', MODEL);
+  buildRibbon(); buildProblem(D); buildLifecycle(); buildQueue(MODEL, QUEUE, EV); buildEvals(EV); buildGlossary();
+});
+
+/* ================= flow ribbon (tab 1 top) ================= */
+const STEPS = [
+  ['Schedule', 'Patient books; demographics and insurance captured. Errors here become denials weeks later.'],
+  ['Verify eligibility', 'Is the coverage active today and what does it cover? Electronic 270/271 check.'],
+  ['Prior auth', 'Payer pre-approval for certain procedures. Manual, slow, a top denial source.'],
+  ['Code the visit', 'The visit becomes CPT + ICD-10 codes and modifiers.'],
+  ['Scrub & submit', 'Claim checked against payer rules, sent as an EDI 837. Last moment the practice controls the claim. The Co-Pilot scores risk here.'],
+  ['Payer decides', 'Pay, deny, or partial-pay. Verdict returns as an EDI 835 with CARC reason codes.'],
+  ['Work denials', 'Staff decode reasons, fix, resubmit, appeal. $25 to $118 labour per claim.'],
+  ['Bill patient', 'Copay, deductible, coinsurance collected from the patient.'],
+];
+function buildRibbon() {
+  $('#ribbon').innerHTML = STEPS.map(([t, d], i) => `
+    <div class="rstep">
+      <div class="box ${i===4?'hot':''}" data-tip="${d}" onclick="showTab('lifecycle')">
+        <b>STEP ${i+1}${i===4?' · CO-PILOT':''}</b>${t}
+      </div>
+      ${i<7?'<span class="arrow">→</span>':''}
+    </div>`).join('');
+  bindTips($('#ribbon'));
+}
+
+/* ================= TAB 1 ================= */
+const KPI_DEFS = {
+  rate: 'Denied claims as a share of all claims submitted. Industry norm is 10 to 15 percent; best practice is under 8.',
+  denied: 'Gross billed charges sitting on denied claims. Not all of it is collectible, but all of it is stuck.',
+  rework: 'Staff labour spent decoding, correcting and resubmitting denials. Industry range: $25 to $118 per reworked claim.',
+  writeoff: 'Share of denials the practice gave up on. This revenue is permanently lost.',
+  prevent: 'Share of denial reasons knowable BEFORE submission: eligibility, prior auth, modifiers, missing info, timely filing. This is the product opportunity.',
+};
+function buildProblem(D) {
+  const payers = [...new Set(D.cube.map(c=>c.p))].sort();
+  const specs = [...new Set(D.cube.map(c=>c.s))].sort();
+  let fp = 'All', fs = 'All';
+
+  $('#filterbar').innerHTML = `
+    <div class="fgroup"><span class="flabel">Payer</span>
+      ${['All',...payers].map(p=>`<button data-k="p" data-v="${p}" class="${p==='All'?'on':''}">${p}</button>`).join('')}</div>
+    <div class="fgroup"><span class="flabel">Specialty</span>
+      ${['All',...specs].map(s=>`<button data-k="s" data-v="${s}" class="${s==='All'?'on':''}">${s}</button>`).join('')}</div>`;
+  $('#filterbar').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.k === 'p') fp = b.dataset.v; else fs = b.dataset.v;
+    document.querySelectorAll(`#filterbar button[data-k="${b.dataset.k}"]`).forEach(x=>x.classList.toggle('on', x===b));
+    update();
+  });
+
+  const wrap = $('#qblocks');
+  const block = (q, chartId, takeawayId, cols) => `
+    <div class="card qblock">
+      <div class="question">${q.title}</div>
+      <h3 style="margin-top:6px">${q.question}</h3>
+      <div class="chart-wrap" id="${chartId}"></div>
+      <div class="takeaway" id="${takeawayId}"></div>
+      <details class="sql"><summary>Show the commented SQL + full-book result</summary>
+        <div class="sqlnote">The charts and KPIs respond to the filters above. The SQL below is the original discovery query over the full book of claims; comments explain each clause.</div>
+        <pre class="sql">${sqlHtml(q.sql)}</pre>${resultTable(q.rows, cols)}</details>
+    </div>`;
+  wrap.innerHTML =
+    block(D.Q2, 'c-payer', 't-payer') +
+    block(D.Q3, 'c-reason', 't-reason') +
+    block(D.Q8, 'c-gap', 't-gap') +
+    block(D.Q5, 'c-trend', 't-trend') +
+    block(D.Q6, 'c-cash', 't-cash') +
+    block(D.Q7, 'c-topreason', 't-topreason') +
+    `<div class="card qblock" style="border-left:4px solid var(--good)"><div class="question">Decision</div>
+      <h3 style="margin-top:6px">Build a pre-submission Denial Prevention Co-Pilot</h3>
+      <p style="font-size:14px;margin-top:8px">Score every claim at claim-scrubbing time (step 5), flag high-risk claims with the predicted denial reason and a one-click fix, keep the biller in the loop, and feed every override and every 835 outcome back into the model. Tabs 3 and 4 are that product, working.</p></div>`;
+  $('#c-topreason').innerHTML = resultTable(D.Q7.rows);
+  $('#t-topreason').innerHTML = `Window-function view: each payer's <i>dominant</i> failure mode differs (UnityHealth: prior auth; Medicaid: eligibility churn). This is the moat argument: cross-practice adjudication history learns payer patterns no single practice sees alone. This table always shows the full book.`;
+
+  function cells() { return D.cube.filter(c => (fp==='All'||c.p===fp) && (fs==='All'||c.s===fs)); }
+  const sum = (arr, f) => arr.reduce((a,c)=>a+f(c), 0);
+
+  function update() {
+    const cs = cells();
+    const n = sum(cs,c=>c.n), d = sum(cs,c=>c.d), dc = sum(cs,c=>c.dc), rw = sum(cs,c=>c.rw), wo = sum(cs,c=>c.wo);
+    const catTot = {};
+    cs.forEach(c => Object.entries(c.cat).forEach(([k,v]) => catTot[k]=(catTot[k]||0)+v));
+    const prevD = Object.entries(catTot).reduce((a,[k,v]) => a + (D.cat_preventable[k]?v:0), 0);
+    const scope = (fp==='All'&&fs==='All') ? 'full book, 6,000 claims' : [fp!=='All'?fp:null, fs!=='All'?fs:null].filter(Boolean).join(' · ') + ` · ${n.toLocaleString()} claims`;
+
+    $('#kpi-tiles').innerHTML = [
+      ['Denial rate', d&&n?pct1(d/n):'0%', 'bad', scope, KPI_DEFS.rate],
+      ['Charges denied', fmt$(dc), 'bad', 'gross charges tied up in denials', KPI_DEFS.denied],
+      ['Spent on rework', fmt$(rw), '', 'staff labour on denied claims', KPI_DEFS.rework],
+      ['Denials never recovered', d?pct1(wo/d):'0%', 'bad', 'written off entirely', KPI_DEFS.writeoff],
+      ['Preventable at submission', d?pct1(prevD/d):'0%', 'ok', 'knowable before the claim goes out', KPI_DEFS.prevent],
+    ].map(([l,v,c,note,def])=>`<div class="card tile"><div class="label" data-tip="${def}">${l}</div><div class="value ${c}">${v}</div><div class="note">${note}</div></div>`).join('');
+    bindTips($('#kpi-tiles'));
+
+    // payer chart (specialty filter applies; payer filter highlights)
+    const byPayer = payers.map(p => {
+      const pcs = D.cube.filter(c => c.p===p && (fs==='All'||c.s===fs));
+      const pn = sum(pcs,c=>c.n), pd = sum(pcs,c=>c.d);
+      return {payer:p, rate: pn?100*pd/pn:0, claims:pn, denied:pd, dc:sum(pcs,c=>c.dc)};
+    }).sort((a,b)=>b.rate-a.rate);
+    reg.once('c-payer', () => hbar($('#c-payer'), byPayer, {valKey:'rate', labelKey:'payer', fmt:v=>v.toFixed(1)+'%', max:36,
+      color:r => fp==='All'||r.payer===fp ? 'var(--blue)' : 'var(--blue-100)',
+      tipFn:r=>`${r.payer}: ${r.denied} of ${r.claims.toLocaleString()} claims denied. ${fmt$(r.dc)} in denied charges.`}));
+    $('#t-payer').innerHTML = `Not a uniform problem: <b>${byPayer[0].payer} (${byPayer[0].rate.toFixed(1)}%)</b> denies at roughly ${(byPayer[0].rate/Math.max(byPayer[byPayer.length-1].rate,1)).toFixed(1)}x the rate of ${byPayer[byPayer.length-1].payer}. Payer-specific behaviour means a model that learns per-payer patterns beats one-size-fits-all scrubber rules.`;
+
+    // reason chart
+    const reasons = Object.entries(catTot).map(([k,v])=>({cat:k, n:v, prev:D.cat_preventable[k]})).sort((a,b)=>b.n-a.n);
+    reg.once('c-reason', () => hbar($('#c-reason'), reasons, {valKey:'n', labelKey:'cat',
+      color:r=>r.prev? 'var(--blue)':'var(--baseline)',
+      tipFn:r=>`${r.cat}: ${r.n} denials (${d?(100*r.n/d).toFixed(1):0}% of denials in this slice). ${r.prev?'Preventable before submission.':'Only knowable after the payer adjudicates; the honest limit of this product.'}`}));
+    $('#t-reason').innerHTML = `The reasons are not exotic: eligibility, prior auth, modifiers, missing info, timely filing. Blue bars are <b>knowable before submission</b> from data NewMed already holds. Gray bars (medical necessity, diagnosis mismatch, duplicates) genuinely need adjudication; that is the honest limit of this product.`;
+
+    // gap audit
+    const gapDefs = [['pa','Prior auth required but missing'],['el','Eligibility unverified or stale >60d'],['mod','Required modifier missing'],['tf','Past timely-filing limit'],['clean','No gap present (clean fact pattern)']];
+    const gaps = gapDefs.map(([k,label]) => {
+      const gn = sum(cs,c=>c.gaps[k][0]), gd = sum(cs,c=>c.gaps[k][1]);
+      return {gap:label, rate: gn?100*gd/gn:0, n:gn, key:k};
+    });
+    reg.once('c-gap', () => hbar($('#c-gap'), gaps, {valKey:'rate', labelKey:'gap', fmt:v=>v.toFixed(1)+'%', max:105,
+      color:r=>r.key==='clean'?'var(--good)':'var(--serious)',
+      tipFn:r=>`${r.n.toLocaleString()} claims in this slice have this fact pattern.`}));
+    const clean = gaps.find(g=>g.key==='clean'), worst = gaps.filter(g=>g.key!=='clean'&&g.n>0).sort((a,b)=>b.rate-a.rate)[0];
+    $('#t-gap').innerHTML = `The feasibility check: claims with a clean fact pattern deny at <b>${clean.rate.toFixed(1)}%</b>; with a known gap, up to <b>${worst?worst.rate.toFixed(1):0}%</b>. The risk signal exists at submission time, so a pre-submission score is feasible, not speculative.`;
+
+    // trend
+    const months = [...new Set(cs.map(c=>c.m))].sort();
+    const trend = months.map(m => { const mc = cs.filter(c=>c.m===m); const mn=sum(mc,c=>c.n), md=sum(mc,c=>c.d); return mn?100*md/mn:0; });
+    reg.once('c-trend', () => lineChart($('#c-trend'), [{name:'denial rate', color:'var(--blue)', data:trend}],
+      {ymax:Math.max(24, Math.ceil(Math.max(...trend,1)/4)*4+4), yfmt:v=>v.toFixed(0)+'%', xlabels:months.map(m=>m.slice(5)+'/26')}));
+    $('#t-trend').innerHTML = `Six months, no improvement trend: the leak is structural, not a bad quarter. Nobody is going to process-discipline their way out of it, which is what justifies a product rather than a memo.`;
+
+    // cash
+    const payN=sum(cs,c=>c.pay[0]), payD=sum(cs,c=>c.pay[1]), recN=sum(cs,c=>c.rec[0]), recD=sum(cs,c=>c.rec[1]);
+    const cash = [
+      {k:'Paid first pass', v: payN?payD/payN:0, n:payN},
+      {k:'Denied, recovered after rework', v: recN?recD/recN:0, n:recN},
+    ];
+    reg.once('c-cash', () => hbar($('#c-cash'), cash, {valKey:'v', labelKey:'k', fmt:v=>v.toFixed(0)+' days',
+      color:r=>r.k==='Paid first pass'?'var(--good)':'var(--serious)', tipFn:r=>`${r.n.toLocaleString()} claims. Average days from service to payment.`}));
+    $('#t-cash').innerHTML = `Denials also stall cash: recovered-after-rework claims take <b>${cash[1].v.toFixed(0)} days</b> to pay vs <b>${cash[0].v.toFixed(0)} days</b> first-pass. Roughly a 3x wait on top of the labour cost.`;
+  }
+
+  // reg.once: register a redraw closure once per chart id, always drawing latest state
+  const regd = {};
+  reg.once = (id, fn) => { regd[id] = fn; if (!reg.once[id]) { reg.once[id] = true; REDRAWS.push(() => regd[id] && regd[id]()); } fn(); };
+  update();
+}
+
+/* ================= TAB 2 ================= */
+function buildLifecycle() {
+  const PHASES = [
+    {label:'FRONT OFFICE · before the visit', color:'#1baf7a', span:3},
+    {label:'CLINICAL & CODING', color:'#4a3aa7', span:1},
+    {label:'SUBMISSION', color:'#1c5cab', span:1},
+    {label:'PAYER SIDE', color:'#eda100', span:1},
+    {label:'BACK OFFICE · after the verdict', color:'#ec835a', span:2},
+  ];
+  const colors = ['#1baf7a','#1baf7a','#1baf7a','#4a3aa7','#1c5cab','#eda100','#ec835a','#ec835a'];
+  let html = '<div class="phases">' + PHASES.map(p =>
+    `<div class="phase-label" style="background:${p.color};flex:${p.span}">${p.label}</div>`).join('') + '</div>';
+  html += '<div class="nodes">' + STEPS.map(([t,d],i)=>`
+    <div class="fnode">
+      <div class="nbox ${i===4?'copilot':''} ${i===4||i===6?'badged':''}" data-tip="${d}">
+        ${i===4?'<div class="badge">CO-PILOT SCORES RISK HERE</div>':''}
+        ${i===6?'<div class="badge gray">BILLING ASSISTANT (2026)</div>':''}
+        <div class="nnum" style="background:${colors[i]}">${i+1}</div>
+        <div class="ntitle">${t}</div>
+        <div class="nsub">${['Demographics + insurance in','270/271 coverage check','Payer pre-approval','CPT + ICD-10 + modifiers','EDI 837 out via clearinghouse','EDI 835 verdict back','Decode CARC, fix, resubmit','Patient responsibility'][i]}</div>
+      </div>
+      ${i<7?'<div class="farrow">→</div>':''}
+    </div>`).join('') + '</div>';
+  // shift-left band: denials born vs discovered vs worked, plus the move arrow
+  html += `
+    <div class="shiftband">
+      <svg width="100%" height="74" viewBox="0 0 1000 74" preserveAspectRatio="none">
+        <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#1c5cab"/></marker></defs>
+        <path d="M 810 14 C 730 66, 640 66, 575 22" fill="none" stroke="#1c5cab" stroke-width="2.5" stroke-dasharray="7 5" marker-end="url(#ah)"/>
+        <text x="688" y="66" text-anchor="middle" font-size="13" font-weight="650" fill="#1c5cab">shift the intelligence left: prevent at 5 instead of cure at 7</text>
+      </svg>
+    </div>
+    <div class="anno">
+      <div style="flex:5;background:#e2f2ea;color:#00522e">Denials are BORN here (steps 1 to 5): stale eligibility, missing auth, coding gaps</div>
+      <div style="flex:1;background:#fdf0d4;color:#7a5200">DISCOVERED here, weeks later</div>
+      <div style="flex:2;background:#fdeae2;color:#8a3416">WORKED here, at $25 to $118 per claim</div>
+    </div>`;
+  $('#flow').innerHTML = html;
+  bindTips($('#flow'));
+
+  $('#stage-cards').innerHTML = STEPS.map(([t,d],i)=>`
+    <div class="card sc"><h4><i>${i+1}</i>${t}</h4><p>${d}</p></div>`).join('');
+}
+
+/* ================= TAB 3 ================= */
+const FIXES = {
+  pa_gap:      {fix:'Request prior authorization via the payer portal before submitting', pred:'CO-197: Precertification/authorization absent'},
+  elig_gap:    {fix:'Run a real-time eligibility check (EDI 270/271) and refresh coverage on file', pred:'CO-27: Expenses incurred after coverage terminated'},
+  mod_gap:     {fix:'Add the required modifier to the claim line (for example laterality -RT/-LT, or -25)', pred:'CO-4: Procedure code inconsistent with modifier'},
+  missing_fields:{fix:'Complete the missing claim fields before submission', pred:'CO-16: Claim lacks information needed for adjudication'},
+  timely_exceeded:{fix:'Submit TODAY and attach documentation for a timely-filing exception', pred:'CO-29: Time limit for filing has expired'},
+  timely_near: {fix:'Prioritize for submission today; this claim is approaching the payer filing limit', pred:'CO-29 risk: near timely-filing limit'},
+};
+const FIXABLE = ['pa_gap','elig_gap','mod_gap','missing_fields','timely_near'];
+let session = {reviewed:new Set(), fixed:0, protected:0, overridden:0};
+let queueState = [];
+
+function score(features, model) {
+  let z = model.bias;
+  for (const f of model.features) z += f.weight * (features[f.name]||0);
+  return 1/(1+Math.exp(-z));
+}
+function riskBand(p){ return p>=0.5?['High','var(--critical)']:p>=0.25?['Elevated','var(--serious)']:p>=0.10?['Moderate','var(--warn)']:['Low','var(--good)']; }
+
+function buildQueue(model, queue, EV) {
+  queueState = queue.map(q => ({...q, features:{...q.features}, applied:[], resolved:false, overridden:false}));
+  renderQueue(model, EV);
+}
+function renderQueue(model, EV, selId=null) {
+  queueState.forEach(q => q.risk = score(q.features, model));
+  const sorted = [...queueState].sort((a,b)=>b.risk-a.risk);
+  $('#queue-body').innerHTML = sorted.map(q=>{
+    const [band,color] = riskBand(q.risk);
+    return `<tr class="row ${q.claim_id===selId?'sel':''} ${q.resolved||q.overridden?'done':''}" data-id="${q.claim_id}">
+      <td><span class="risk-pill" style="background:${color}">${Math.round(q.risk*100)}%</span></td>
+      <td>${q.claim_id.slice(-5)}${q.resolved?' <span class="chip">fixed</span>':q.overridden?' <span class="chip">sent as-is</span>':''}</td>
+      <td>${q.payer}</td><td data-tip="${q.cpt_desc}">${q.cpt_code}</td>
+      <td style="text-align:right">${fmt$(q.charge_amount)}</td></tr>`;
+  }).join('');
+  bindTips($('#queue-body'));
+  document.querySelectorAll('#queue-body tr.row').forEach(tr => tr.addEventListener('click', ()=>{
+    session.reviewed.add(tr.dataset.id); $('#s-reviewed').textContent = session.reviewed.size;
+    renderQueue(model, EV, tr.dataset.id); renderDetail(tr.dataset.id, model, EV);
+    if (innerWidth < 900) $('#detail').scrollIntoView({behavior:'smooth', block:'start'});
+  }));
+}
+function protectValue(deltaRisk, EV) {
+  const e = EV.economics;
+  return deltaRisk * (e.avg_rework_cost + e.writeoff_rate*e.avg_lost_revenue_per_writeoff) * e.fix_success_rate * 4;
+}
+function renderDetail(id, model, EV, flashFrom=null) {
+  const q = queueState.find(x=>x.claim_id===id);
+  const [band,color] = riskBand(q.risk);
+  const contribs = model.features
+    .filter(f => (q.features[f.name]||0)===1 && Math.abs(f.weight)>0.15)
+    .map(f => ({...f, contribution:f.weight}))
+    .sort((a,b)=>b.contribution-a.contribution);
+  const topGap = contribs.find(c => FIXES[c.name]);
+  const gaps = contribs.filter(c => FIXES[c.name] && (FIXABLE.includes(c.name)||c.name==='timely_exceeded'));
+  const maxW = Math.max(...contribs.map(c=>Math.abs(c.contribution)), 1);
+
+  $('#detail').innerHTML = `
+    <h3>${q.claim_id} <span class="chip">${q.specialty}</span></h3>
+    <div class="meta">${q.practice} · ${q.payer} · patient ${q.patient_id}<br>
+      CPT ${q.cpt_code} (${q.cpt_desc}) · Dx ${q.icd10_code} · service ${q.service_date} · charge <b>${fmt$(q.charge_amount)}</b><br>
+      ${q.days_to_submit} days since service (payer limit: ${q.timely_limit}) ${q.elig_stale_days>0?`· eligibility last verified ${q.elig_stale_days} days ago`:''}</div>
+    <div class="gauge-row">
+      <div class="gauge-num" style="color:${color}" data-tip="The model's predicted probability that this claim would be denied if submitted as-is.">${flashFrom!==null?`<span style="color:var(--muted);font-size:20px;text-decoration:line-through">${Math.round(flashFrom*100)}%</span> `:''}${Math.round(q.risk*100)}%</div>
+      <div class="gauge-track"><div class="gauge-fill" style="width:${q.risk*100}%;background:${color}"></div></div>
+      <span class="risk-pill" style="background:${color}">${band}</span>
+    </div>
+    ${flashFrom!==null?`<p class="delta-flash">✓ Fix applied. Predicted denial risk down ${Math.round((flashFrom-q.risk)*100)} points.</p>`:''}
+    <h3 style="margin-top:8px">Why the model flags it</h3>
+    ${contribs.length? contribs.map(c=>`
+      <div class="factor ${c.contribution<0?'protective':''}" data-tip="Model weight ${c.contribution>0?'+':''}${c.contribution.toFixed(2)}. Positive weights push risk up, negative pull it down. Weights are learned from historical adjudication outcomes.">
+        <div class="fbar"><i style="width:${Math.min(100,Math.abs(c.contribution)/maxW*100)}%"></i></div>
+        <span>${c.label} <span style="color:var(--muted)">(${c.contribution>0?'+':''}${c.contribution.toFixed(2)})</span></span>
+      </div>`).join('') : '<p style="font-size:13px;color:var(--muted)">No elevated risk factors. Clean fact pattern.</p>'}
+    ${topGap && FIXES[topGap.name] ? `<div class="predbox"><b>Predicted denial if submitted as-is:</b> ${FIXES[topGap.name].pred}</div>`:''}
+    ${q.applied.length ? `
+      <div class="appliedbox"><b style="font-size:13px">Applied this session</b>
+        ${q.applied.map((a,i)=>`<div class="fix-row"><span>✓ ${FIXES[a.feat].fix}</span><button class="ghost" data-undo="${i}">Undo</button></div>`).join('')}
+      </div>`:''}
+    ${!q.overridden ? `
+      <div class="fixbox">
+        <b style="font-size:13.5px">Suggested actions</b>
+        ${gaps.length? gaps.map(g=>`
+          <div class="fix-row"><span style="font-size:13px">${FIXES[g.name].fix}</span>
+          ${FIXABLE.includes(g.name)?`<button class="apply" data-fix="${g.name}">Apply fix</button>`:'<span class="chip">manual</span>'}</div>`).join('')
+          : `<div class="fix-row"><span style="font-size:13px">${q.applied.length?'All suggested fixes applied. Claim is ready to submit.':'No pre-submission fix available; residual risk is payer-behavioural. Consider a documentation review before submitting.'}</span></div>`}
+        <div class="fix-row" style="border-top:1px solid var(--grid);margin-top:6px;padding-top:10px">
+          <span style="font-size:13px;color:var(--muted)">Disagree with the model?</span>
+          <button class="ghost" id="override-btn">Override: submit as-is</button></div>
+      </div>`:'<p style="font-size:13px;color:var(--muted);margin-top:10px">Submitted as-is. The override is logged as a training label.</p>'}
+    <div class="feedback-note">Every applied fix, undo, override, and eventual 835 outcome is logged as a labeled example. That feedback loop retrains the model. The AI recommends; the biller decides. Unfamiliar term? <a class="softlink" onclick="showTab('glossary')">Glossary</a>.</div>
+    <div class="truth"><button id="truth-btn">Reveal: what actually happened to this claim in the synthetic warehouse</button><span id="truth-out"></span></div>`;
+  bindTips($('#detail'));
+
+  document.querySelectorAll('#detail button.apply').forEach(b => b.addEventListener('click', ()=>{
+    const from = q.risk;
+    const snapshot = {...q.features};
+    q.features[b.dataset.fix] = 0;
+    if (b.dataset.fix==='timely_near') q.features.timely_exceeded = 0;
+    q.risk = score(q.features, model);
+    const dp = protectValue(from - q.risk, EV);
+    q.applied.push({feat:b.dataset.fix, snapshot, dp});
+    session.fixed++; session.protected += dp;
+    $('#s-fixed').textContent = session.fixed;
+    $('#s-protected').textContent = fmt$(session.protected);
+    const remaining = model.features.filter(f=>(q.features[f.name]||0)===1 && FIXES[f.name] && FIXABLE.includes(f.name));
+    q.resolved = !remaining.length;
+    renderQueue(model, EV, id); renderDetail(id, model, EV, from);
+  }));
+  document.querySelectorAll('#detail button[data-undo]').forEach(b => b.addEventListener('click', ()=>{
+    const a = q.applied.splice(+b.dataset.undo, 1)[0];
+    q.features = {...a.snapshot};
+    // re-apply any fixes that came after the undone one, against the restored state
+    q.applied.slice(+b.dataset.undo).forEach(later => { q.features[later.feat] = 0; if (later.feat==='timely_near') q.features.timely_exceeded = 0; });
+    q.risk = score(q.features, model);
+    session.fixed--; session.protected -= a.dp;
+    $('#s-fixed').textContent = session.fixed;
+    $('#s-protected').textContent = fmt$(Math.max(0, session.protected));
+    q.resolved = false;
+    renderQueue(model, EV, id); renderDetail(id, model, EV);
+  }));
+  const ov = $('#override-btn');
+  if (ov) ov.addEventListener('click', ()=>{
+    q.overridden = true; session.overridden++; $('#s-overridden').textContent = session.overridden;
+    renderQueue(model, EV, id); renderDetail(id, model, EV);
+  });
+  $('#truth-btn').addEventListener('click', ()=>{
+    $('#truth-out').innerHTML = q.actual_status==='denied'
+      ? ` <b style="color:var(--critical)">Denied (${q.actual_denial_code})</b>. The model's flag was correct.`
+      : ' <b style="color:var(--good-text)">Paid first-pass.</b>' + (q.risk>=0.25?' A false positive: this review was the cost of the operating threshold. See tab 4.':'');
+  });
+}
+
+/* ================= TAB 4 ================= */
+function buildEvals(EV) {
+  const TILE_DEFS = {
+    model: 'Chosen for auditability: a biller must be able to see why a claim was flagged, or they stop trusting the queue. Complexity is earned with evidence, not assumed.',
+    auc: 'Area under the ROC curve on unseen future claims. 0.5 is coin-flip, 1.0 is perfect. Temporal split means the model never saw the test period.',
+    test: 'May and June 2026 claims, held out entirely from training.',
+    label: 'Every payer verdict (the EDI 835 remittance) is a free training label. The model improves as a by-product of normal operations.',
+  };
+  $('#eval-tiles').innerHTML = [
+    ['Model', 'Logistic regression', '15 features, pure Python, every weight auditable', TILE_DEFS.model],
+    ['Backtest AUC', EV.auc, 'temporal split: train Jan-Apr, test May-Jun', TILE_DEFS.auc],
+    ['Test window', EV.test_n.toLocaleString()+' claims', EV.test_denials+' actual denials ('+pct(EV.test_base_rate)+' base rate)', TILE_DEFS.test],
+    ['Label source', 'EDI 835 remits', 'the data flywheel', TILE_DEFS.label],
+  ].map(([l,v,n,def])=>`<div class="card tile"><div class="label" data-tip="${def}">${l}</div><div class="value" style="font-size:24px">${v}</div><div class="note">${n}</div></div>`).join('');
+  bindTips($('#eval-tiles'));
+
+  const sweep = EV.sweep, e = EV.economics;
+  const slider = $('#t-slider');
+  const draw = () => {
+    const s = sweep[+slider.value];
+    $('#t-label').textContent = Math.round(s.threshold*100)+'%';
+    const monthlyScale = (e.monthly_claims / (EV.test_n/2));
+    const flaggedMo = Math.round(s.flagged*monthlyScale), tpMo = s.tp*monthlyScale;
+    const hoursMo = flaggedMo*e.review_minutes_per_flag/60;
+    const savedMo = tpMo*e.fix_success_rate*(e.avg_rework_cost + e.writeoff_rate*e.avg_lost_revenue_per_writeoff);
+    $('#eval-grid').innerHTML = [
+      ['Precision', s.precision!=null?pct(s.precision):'-', 'of flagged claims, how many would truly deny', 'Precision protects biller trust: every false flag wastes review minutes and erodes confidence in the queue.'],
+      ['Recall', pct(s.recall), 'of true denials, how many we catch', 'Recall protects revenue: every missed denial costs rework and possibly a write-off.'],
+      ['Claims flagged', s.flagged_pct+'%', `about ${flaggedMo}/month, ${hoursMo.toFixed(0)} biller-hours of review`, 'The workload knob. A flooded queue gets ignored, which is worse than a smaller queue that is trusted.'],
+      ['Est. protected / month', fmt$(savedMo), 'rework avoided + write-off revenue preserved', 'Assumptions are printed below and deliberately conservative.'],
+    ].map(([l,v,n,def])=>`<div class="card tile" style="padding:12px 16px"><div class="label" data-tip="${def}">${l}</div><div class="value" style="font-size:24px">${v}</div><div class="note">${n}</div></div>`).join('');
+    bindTips($('#eval-grid'));
+    $('#cm').innerHTML = `
+      <div></div><div class="hd">Model: flag</div><div class="hd">Model: pass</div>
+      <div class="hd">Actually denied</div>
+      <div class="cell" style="background:#e2f2e2"><b>${s.tp}</b>caught (TP)</div>
+      <div class="cell" style="background:#fbe4e4"><b>${s.fn}</b>missed (FN)</div>
+      <div class="hd">Actually paid</div>
+      <div class="cell" style="background:#fdf3df"><b>${s.fp}</b>wasted review (FP)</div>
+      <div class="cell" style="background:var(--plane)"><b>${s.tn}</b>correctly passed (TN)</div>`;
+    lineChart($('#pr-chart'), [
+      {name:'precision', color:'var(--blue)', data:sweep.map(x=>x.precision??1), labelAt:33, dy:-10},
+      {name:'recall', color:'var(--aqua)', data:sweep.map(x=>x.recall), labelAt:6, dy:-10},
+      {name:'flag rate', color:'var(--violet)', data:sweep.map(x=>x.flagged_pct/100), labelAt:2, dy:16},
+    ], {ymax:1.0, yfmt:v=>pct(v), height:230, marker:+slider.value,
+        xlabels:sweep.map(x=>Math.round(x.threshold*100)+'%')});
+    $('#econ-note').textContent = `Economics assumptions (transparent, editable in model/train_model.py): ${e.review_minutes_per_flag} min biller review per flag · ${pct(e.fix_success_rate)} of flagged preventable gaps fixable pre-submission · avg rework cost ${fmt$(e.avg_rework_cost)} · ${pct(e.writeoff_rate)} of denials written off at avg ${fmt$(e.avg_lost_revenue_per_writeoff)} lost contracted revenue · ${e.monthly_claims.toLocaleString()} claims/month for this group. False positives cost trust, not just minutes. Same trade-off I tuned on a churn model: a false flag wastes retention spend; here it wastes biller review time.`;
+  };
+  slider.addEventListener('input', draw);
+  REDRAWS.push(draw); draw();
+}
+
+/* ================= GLOSSARY ================= */
+function buildGlossary() {
+  const terms = [
+    ['Claim', 'The itemized bill a practice sends an insurer after a visit: who was seen, what was done (CPT), why (ICD-10), and the charge.', 'The atomic unit this whole product scores.'],
+    ['Payer', 'Whoever pays: Medicare (federal, 65+), Medicaid (state, low-income), or commercial insurers. Each has its own rulebook.', 'Denial behaviour is payer-specific: the core modeling insight (tab 1).'],
+    ['CPT code', 'Current Procedural Terminology, a 5-digit code for what was done. 45380 = colonoscopy with biopsy.', 'Procedure determines charge, prior-auth need, and modifier rules.'],
+    ['ICD-10 code', 'The diagnosis code, the why behind the procedure. K21.9 = acid reflux, unspecified.', 'A diagnosis inconsistent with the procedure triggers CO-11 denials.'],
+    ['Modifier', 'A 2-character suffix adding context to a CPT: -LT/-RT (left/right side), -25 (separate service same day).', 'Missing modifiers are a top preventable denial (CO-4), and a one-click fix.'],
+    ['Denial and CARC code', 'Payer refuses to pay; the reason arrives as a Claim Adjustment Reason Code, for example CO-197 = no prior authorization.', 'CARCs are the labels the model learns from and the predictions it makes.'],
+    ['EDI 837 / 835', 'The electronic claim going out (837) and the remittance advice coming back (835) with pay-or-deny verdicts.', 'The 835 stream is a free, continuous source of training labels.'],
+    ['Clearinghouse', 'The routing middleman that validates and forwards claims between practices and thousands of payers.', 'Where basic scrubbing happens today: static rules, not learning.'],
+    ['Eligibility verification (270/271)', 'Electronic check that the patient coverage is active and what it covers, ideally run before the visit.', 'Stale eligibility is the top denial cause here (CO-27), and cheap to re-verify.'],
+    ['Prior authorization', 'Payer pre-approval required before certain procedures. Manual, slow, resented, and skipping it nearly guarantees a denial.', 'Highest-severity flag in the queue: about 70% denial rate when missing.'],
+    ['Timely filing limit', 'Deadline for submitting a claim after the service date: 90 days (strict commercial) to 365 (Medicare).', 'Miss it and the claim is nearly unrecoverable (about 90% denial): CO-29.'],
+    ['Clean claim rate', 'Share of claims accepted and paid on first submission, no edits, no rework. Best practice: 90 to 95%+.', 'The north-star metric this product moves.'],
+    ['Denial rate', 'Share of claims denied. Industry runs about 10 to 15%; Lakeview is at 15.4%.', 'The headline problem metric from discovery.'],
+    ['Days in A/R', 'Average days from service to payment, the cash-flow health metric. Good is under about 35 to 40.', 'Denied-then-recovered claims take about 95 days vs about 30 first-pass.'],
+    ['Rework cost', 'Staff labour to decode, correct, and resubmit a denied claim: roughly $25 to $118 each.', 'One side of the ROI math on the evals tab.'],
+    ['Write-off', 'A denial the practice gives up on: revenue permanently lost.', 'About 46% of denials here. The biggest number this product protects.'],
+    ['RCM', 'Revenue Cycle Management, the whole pipeline on tab 2, from booking to payment.', 'The product category NewMed Practice Management lives in.'],
+    ['Payer mix', 'A practice split across Medicare / Medicaid / commercial / self-pay.', 'Determines each practice risk profile and the model calibration per practice.'],
+    ['HIPAA / PHI', 'US patient-privacy law / Protected Health Information.', 'Any real deployment needs BAA coverage, minimum-necessary access, audit logs. Named in the risk register, not an afterthought.'],
+    ['Precision / recall', 'Of what we flagged, how much was right / of what was truly there, how much we caught.', 'The product trade-off on tab 4: biller trust vs denials caught. The threshold is a product decision.'],
+  ];
+  $('#gloss').innerHTML = terms.map(([t,d,w])=>`<div class="card term"><h4>${t}</h4><p>${d}</p><div class="why"><b>Why it matters here:</b> ${w}</div></div>`).join('');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI PRD · NewMed Denial Prevention Co-Pilot</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface:#fcfcfb; --plane:#f4f4f1; --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+    --grid:#e1e0d9; --baseline:#c3c2b7; --ring:rgba(11,11,11,0.10);
+    --blue:#2a78d6; --blue-deep:#1c5cab; --blue-100:#cde2fb;
+    --violet:#4a3aa7; --good-text:#006300; --warn-bg:#fdf3df; --eng:#7a5200;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--plane); color:var(--ink); font-size:15px; line-height:1.6; }
+  .shell { max-width:980px; margin:0 auto; padding:0 24px; }
+  header.top { background:linear-gradient(120deg,#0d366b,#1c5cab 60%,#256abf); color:#fff; padding:16px 0; }
+  header.top .shell { display:flex; align-items:center; gap:12px; }
+  header.top .mark { width:34px; height:34px; border-radius:9px; background:#fff; display:grid; place-items:center; flex:none; }
+  header.top b { font-size:17px; }
+  header.top a { color:rgba(255,255,255,0.85); font-size:13.5px; margin-left:auto; text-decoration:none; }
+  header.top a:hover { color:#fff; text-decoration:underline; }
+
+  /* gate */
+  .gatewrap { display:grid; place-items:center; padding:60px 18px; }
+  .gate { max-width:560px; width:100%; background:var(--surface); border:1px solid var(--ring); border-radius:14px; padding:30px 32px; }
+  .gate h1 { font-size:21px; letter-spacing:-0.3px; }
+  .gate p.g { color:var(--ink-2); font-size:14px; margin:10px 0 20px; }
+  .gate label { display:block; font-size:12.5px; font-weight:650; color:var(--ink-2); margin:12px 0 4px; }
+  .gate input, .gate textarea { width:100%; border:1px solid var(--baseline); border-radius:8px; padding:9px 12px; font-size:14px; font-family:inherit; background:#fff; }
+  .gate textarea { min-height:70px; resize:vertical; }
+  .gate .row { display:flex; gap:12px; } .gate .row > div { flex:1; }
+  button.btn { background:var(--blue); color:#fff; border:0; border-radius:8px; padding:11px 20px; font-weight:650; font-size:14px; cursor:pointer; font-family:inherit; }
+  button.btn:hover { background:var(--blue-deep); }
+  .divider { display:flex; align-items:center; gap:12px; margin:22px 0; color:var(--muted); font-size:12px; font-weight:650; letter-spacing:0.05em; }
+  .divider::before, .divider::after { content:""; flex:1; height:1px; background:var(--grid); }
+  .codeRow { display:flex; gap:10px; }
+  .codeRow input { flex:1; }
+  .msg { margin-top:12px; font-size:13.5px; border-radius:8px; padding:10px 14px; display:none; }
+  .msg.ok { background:#e2f2e2; color:var(--good-text); display:block; }
+  .msg.err { background:#fbe4e4; color:#8a1f1f; display:block; }
+
+  /* document */
+  #doc { display:none; padding:34px 0 80px; }
+  article { background:var(--surface); border:1px solid var(--ring); border-radius:14px; padding:44px 52px; }
+  h1.title { font-size:27px; letter-spacing:-0.5px; }
+  .meta-table { width:100%; border-collapse:collapse; margin:18px 0 8px; font-size:13.5px; }
+  .meta-table td { border:1px solid var(--grid); padding:7px 12px; }
+  .meta-table td:first-child { font-weight:650; color:var(--ink-2); width:180px; background:var(--plane); }
+  h2 { font-size:20px; margin:40px 0 10px; letter-spacing:-0.3px; border-bottom:2px solid var(--blue-100); padding-bottom:6px; }
+  h3 { font-size:15.5px; margin:22px 0 8px; }
+  p, li { font-size:14px; color:#333; }
+  ul, ol { padding-left:22px; margin:8px 0; }
+  li { margin-bottom:5px; }
+  table.t { width:100%; border-collapse:collapse; margin:12px 0; font-size:13px; }
+  table.t th { text-align:left; background:var(--plane); border:1px solid var(--grid); padding:7px 10px; font-weight:650; color:var(--ink-2); }
+  table.t td { border:1px solid var(--grid); padding:7px 10px; vertical-align:top; }
+  .eng { background:var(--warn-bg); border:1px dashed #d9a520; border-radius:6px; padding:2px 8px; font-size:12px; font-weight:650; color:var(--eng); white-space:nowrap; }
+  .note { background:var(--blue-100); border-left:3px solid var(--blue); border-radius:6px; padding:10px 14px; font-size:13.5px; margin:12px 0; }
+  .story { border:1px solid var(--grid); border-radius:9px; padding:12px 16px; margin:10px 0; }
+  .story b.st { font-size:13.5px; }
+  .story .ac { font-size:12.5px; color:var(--ink-2); margin-top:6px; }
+  .story .ac code { background:var(--plane); padding:1px 5px; border-radius:4px; font-size:11.5px; }
+  pre.code { background:#10243d; color:#cde2fb; border-radius:8px; padding:14px 16px; overflow-x:auto; font-size:12px; line-height:1.5; margin:10px 0; }
+  .wire { background:#fff; border:1px solid var(--grid); border-radius:10px; padding:10px; margin:12px 0; overflow-x:auto; }
+  .wire figcaption { font-size:12px; color:var(--muted); padding:6px 4px 2px; }
+  .toolbar { display:flex; gap:10px; margin-bottom:16px; }
+  .toolbar button, .toolbar a { font-size:13px; border:1px solid var(--baseline); background:var(--surface); color:var(--ink-2); border-radius:8px; padding:7px 14px; cursor:pointer; text-decoration:none; font-family:inherit; }
+  @media (max-width:700px) { article { padding:26px 18px; } .gate .row { flex-direction:column; } }
+  @media print {
+    header.top, .toolbar, .gatewrap { display:none !important; }
+    #doc { display:block !important; padding:0; }
+    body { background:#fff; } article { border:0; padding:0; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="shell">
+    <div class="mark"><svg width="20" height="20" viewBox="0 0 24 24"><rect x="9.2" y="2.5" width="5.6" height="19" rx="2.4" fill="#1c5cab"/><rect x="2.5" y="9.2" width="19" height="5.6" rx="2.4" fill="#1c5cab"/><rect x="9.2" y="9.2" width="5.6" height="5.6" fill="#2a78d6"/></svg></div>
+    <b>NewMed · AI PRD</b>
+    <a href="../">← Back to the case study hub</a>
+  </div>
+</header>
+
+<!-- ============================ GATE ============================ -->
+<div class="gatewrap" id="gate">
+  <div class="gate">
+    <h1>🔐 AI PRD: access on request</h1>
+    <p class="g">This is the full product requirements pack for the Denial Prevention Co-Pilot (functional specs, TRD, design requirements, evals &amp; QA). Request access below and I will get back to you, or enter the access code if you already have one.</p>
+    <form id="reqForm">
+      <div class="row">
+        <div><label for="f-name">Name</label><input id="f-name" name="name" required></div>
+        <div><label for="f-email">Email</label><input id="f-email" name="email" type="email" required></div>
+      </div>
+      <label for="f-org">Organization / role</label><input id="f-org" name="organization">
+      <label for="f-why">What would you like to use it for?</label><textarea id="f-why" name="reason"></textarea>
+      <input type="hidden" name="_subject" value="NewMed AI PRD access request">
+      <div style="margin-top:16px"><button class="btn" type="submit">Request access</button></div>
+      <div class="msg" id="reqMsg"></div>
+    </form>
+    <div class="divider">OR</div>
+    <label for="code">Access code</label>
+    <div class="codeRow">
+      <input id="code" placeholder="Enter access code" autocomplete="off">
+      <button class="btn" id="codeBtn" type="button">Unlock</button>
+    </div>
+    <div class="msg" id="codeMsg"></div>
+  </div>
+</div>
+
+<!-- ============================ DOCUMENT ============================ -->
+<div id="doc"><div class="shell">
+  <div class="toolbar">
+    <a href="../">← Hub</a>
+    <a href="../copilot/" target="_blank">Open the live prototype</a>
+    <button onclick="window.print()">Print / save as PDF</button>
+    <button onclick="lockDoc()">Lock again</button>
+  </div>
+  <article>
+    <h1 class="title">AI PRD: NewMed Denial Prevention Co-Pilot</h1>
+    <table class="meta-table">
+      <tr><td>Author</td><td>Nayan Lal (Product)</td></tr>
+      <tr><td>Version / status</td><td>v0.9 · draft for engineering review · July 2026</td></tr>
+      <tr><td>Product line</td><td>NewMed Practice Management · claims &amp; billing (fictional platform, portfolio case study)</td></tr>
+      <tr><td>Working prototype</td><td><a href="../copilot/">Live demo</a> · <a href="https://github.com/nayanlal029/portfolio-projects-newmed" target="_blank">source on GitHub</a></td></tr>
+      <tr><td>Related</td><td>Discovery analysis (DISCOVERY.md) · eval methodology (EVALS.md) · companion: Ops Bottleneck Analyzer</td></tr>
+    </table>
+    <div class="note"><b>How to read this pack.</b> Section 1 (functional) and Section 3 (design) are owned by product. Section 2 (TRD) is structured by product and completed with engineering: every field marked <span class="eng">ENG TO CONFIRM</span> carries product's suggested starting point and needs an engineering owner and estimate. Section 4 defines how we will know the product works before, during, and after release.</div>
+
+    <!-- ==================== 1. FUNCTIONAL ==================== -->
+    <h2>1. Functional specifications &amp; requirements</h2>
+    <h3>1.1 Problem and goal</h3>
+    <p>Practices lose material revenue to claim denials: 15.4% denial rate in the discovery dataset against a 10 to 15% industry norm, with 45.5% of denials written off entirely and about $79 average rework labour per denied claim. 80.1% of denial reasons are knowable before submission. Goal: raise the first-pass clean claim rate by scoring every claim for denial risk at claim-scrubbing time, explaining the risk in biller language, and offering a one-click fix, with the biller always in control.</p>
+    <h3>1.2 Users</h3>
+    <table class="t">
+      <tr><th>User</th><th>Job to be done</th><th>Success looks like</th></tr>
+      <tr><td><b>Biller / billing manager</b> (primary)</td><td>Get every claim paid on first pass</td><td>Works a short, trusted queue each morning instead of a reactive denial pile</td></tr>
+      <tr><td>Front-desk staff (secondary)</td><td>Verify coverage before the visit</td><td>Receives eligibility flags early enough to act at check-in</td></tr>
+      <tr><td>Practice administrator (secondary)</td><td>Predictable cash flow</td><td>Sees clean-claim rate and protected dollars per month</td></tr>
+      <tr><td>NewMed RCM services (internal)</td><td>Work denials efficiently at scale</td><td>Fewer preventable denials reaching their queue</td></tr>
+    </table>
+    <h3>1.3 User stories with acceptance criteria</h3>
+    <div class="story"><b class="st">US-1 · Risk-scored queue.</b> As a biller, I see today's pre-submission claims ranked by denial risk so I work the riskiest first.
+      <div class="ac"><code>Given</code> claims in the pre-submission state <code>When</code> I open the queue <code>Then</code> each claim shows a risk percentage and band (Low / Moderate / Elevated / High), sorted descending, recomputed on every claim edit.</div></div>
+    <div class="story"><b class="st">US-2 · Explanation panel.</b> As a biller, I see why a claim is flagged, in my language, so I can trust or challenge the flag.
+      <div class="ac"><code>Given</code> a flagged claim <code>When</code> I open it <code>Then</code> I see every contributing factor with direction and relative strength, the predicted CARC denial code, and plain-language wording (no model jargon). Every factor maps to a field on the claim I can inspect.</div></div>
+    <div class="story"><b class="st">US-3 · One-click fix with undo.</b> As a biller, I apply the suggested fix in one click, and can undo it, so acting is fast and safe.
+      <div class="ac"><code>Given</code> a suggested fix <code>When</code> I click Apply <code>Then</code> the underlying workflow starts (eligibility recheck, PA request, modifier edit), the risk score recomputes immediately, and an Undo control appears that fully restores prior state and counters.</div></div>
+    <div class="story"><b class="st">US-4 · Override.</b> As a biller, I can submit as-is against the model's advice in one click, without friction or guilt.
+      <div class="ac"><code>Given</code> any flagged claim <code>When</code> I click Override <code>Then</code> the claim proceeds to submission, the override is logged as a labeled training event, and no additional confirmation is demanded.</div></div>
+    <div class="story"><b class="st">US-5 · Operating threshold per practice.</b> As a billing manager, I set how many claims get flagged so the queue matches my team's capacity.
+      <div class="ac"><code>Given</code> the threshold setting <code>When</code> I move it <code>Then</code> I see a live preview of expected flags/day, review hours, expected recall, and estimated dollars protected before saving.</div></div>
+    <div class="story"><b class="st">US-6 · Outcome reporting.</b> As a practice administrator, I see what the Co-Pilot protected each month.
+      <div class="ac"><code>Given</code> a closed month <code>When</code> I open the report <code>Then</code> I see clean-claim rate vs baseline, denials prevented (measured against matched control claims), rework hours avoided, and suggestion acceptance rate.</div></div>
+    <h3>1.4 Functional requirements</h3>
+    <table class="t">
+      <tr><th>ID</th><th>Requirement</th><th>Priority</th></tr>
+      <tr><td>FR-1</td><td>Score every professional claim (837P, single line for MVP) on entry to the pre-submission state and on every edit</td><td>P0</td></tr>
+      <tr><td>FR-2</td><td>Display risk score, band, contributing factors with direction/strength, and predicted CARC</td><td>P0</td></tr>
+      <tr><td>FR-3</td><td>Suggested fix per detected gap (eligibility, prior auth, modifier, missing fields, timely filing) with one-click execution where the platform owns the workflow</td><td>P0</td></tr>
+      <tr><td>FR-4</td><td>Undo for every applied fix, restoring claim state and session counters</td><td>P0</td></tr>
+      <tr><td>FR-5</td><td>One-click override; logged as labeled feedback</td><td>P0</td></tr>
+      <tr><td>FR-6</td><td>Per-practice operating threshold with live workload/recall/economics preview</td><td>P1</td></tr>
+      <tr><td>FR-7</td><td>Feedback capture: fix applied / undone / overridden / eventual 835 outcome, joined to model version</td><td>P0</td></tr>
+      <tr><td>FR-8</td><td>Monthly outcome report per practice (clean-claim lift, protected dollars, acceptance, override rate)</td><td>P1</td></tr>
+      <tr><td>FR-9</td><td>Glossary and hover definitions for all billing vocabulary in the UI</td><td>P1</td></tr>
+      <tr><td>FR-10</td><td>Admin audit trail of every score, suggestion, and user action</td><td>P0</td></tr>
+      <tr><td>FR-11</td><td>Never auto-block or auto-edit a claim without explicit biller action</td><td>P0 (principle)</td></tr>
+    </table>
+    <h3>1.5 Non-functional requirements</h3>
+    <ul>
+      <li><b>Latency:</b> score on claim save under 500 ms p95; full-queue nightly rescoring completes before 6:00 AM practice-local time.</li>
+      <li><b>Availability:</b> queue view 99.9%; scoring degradation must fail open (queue works unscored, clearly labeled) never closed.</li>
+      <li><b>Auditability:</b> every score reproducible from logged model version + feature vector for 7 years.</li>
+      <li><b>Accessibility:</b> WCAG 2.1 AA; risk never communicated by color alone (band label + percentage always present).</li>
+    </ul>
+    <h3>1.6 Out of scope (MVP)</h3>
+    <ul>
+      <li>Auto-editing or auto-holding claims; medical-necessity prediction (needs chart data); institutional claims (837I); multi-line adjudication; appeals drafting (stage-7 Billing Assistant territory); payer integrations beyond what the platform already has.</li>
+    </ul>
+
+    <!-- ==================== 2. TRD ==================== -->
+    <h2>2. Technical requirements document (TRD)</h2>
+    <div class="note">Structured by product; to be completed with the engineering team. <span class="eng">ENG TO CONFIRM</span> marks decision points where product proposes a starting point and engineering owns the final call, estimate, and design doc.</div>
+    <h3>2.1 System context</h3>
+    <div class="wire">
+      <svg viewBox="0 0 900 240" width="100%" style="min-width:700px">
+        <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#52514e"/></marker></defs>
+        <g font-size="12" font-family="system-ui">
+          <rect x="10" y="30" width="150" height="46" rx="8" fill="#cde2fb"/><text x="85" y="50" text-anchor="middle" font-weight="650">PM claims DB</text><text x="85" y="65" text-anchor="middle" fill="#52514e">pre-submission state</text>
+          <rect x="210" y="30" width="150" height="46" rx="8" fill="#fcfcfb" stroke="#c3c2b7"/><text x="285" y="50" text-anchor="middle" font-weight="650">Feature service</text><text x="285" y="65" text-anchor="middle" fill="#52514e">claim → feature vector</text>
+          <rect x="410" y="30" width="150" height="46" rx="8" fill="#fcfcfb" stroke="#c3c2b7"/><text x="485" y="50" text-anchor="middle" font-weight="650">Scoring service</text><text x="485" y="65" text-anchor="middle" fill="#52514e">model registry vN</text>
+          <rect x="610" y="30" width="150" height="46" rx="8" fill="#cde2fb"/><text x="685" y="50" text-anchor="middle" font-weight="650">Co-Pilot queue UI</text><text x="685" y="65" text-anchor="middle" fill="#52514e">biller actions</text>
+          <rect x="610" y="140" width="150" height="46" rx="8" fill="#fcfcfb" stroke="#c3c2b7"/><text x="685" y="160" text-anchor="middle" font-weight="650">Feedback events</text><text x="685" y="175" text-anchor="middle" fill="#52514e">fix / undo / override</text>
+          <rect x="410" y="140" width="150" height="46" rx="8" fill="#fcfcfb" stroke="#c3c2b7"/><text x="485" y="160" text-anchor="middle" font-weight="650">Label store</text><text x="485" y="175" text-anchor="middle" fill="#52514e">joins 835 outcomes</text>
+          <rect x="210" y="140" width="150" height="46" rx="8" fill="#fcfcfb" stroke="#c3c2b7"/><text x="285" y="160" text-anchor="middle" font-weight="650">Training pipeline</text><text x="285" y="175" text-anchor="middle" fill="#52514e">retrain + backtest gates</text>
+          <rect x="10" y="140" width="150" height="46" rx="8" fill="#e4e0f7"/><text x="85" y="160" text-anchor="middle" font-weight="650">835 / 837 ingest</text><text x="85" y="175" text-anchor="middle" fill="#52514e">clearinghouse feed</text>
+          <line x1="160" y1="53" x2="205" y2="53" stroke="#52514e" stroke-width="1.5" marker-end="url(#ar)"/>
+          <line x1="360" y1="53" x2="405" y2="53" stroke="#52514e" stroke-width="1.5" marker-end="url(#ar)"/>
+          <line x1="560" y1="53" x2="605" y2="53" stroke="#52514e" stroke-width="1.5" marker-end="url(#ar)"/>
+          <line x1="685" y1="76" x2="685" y2="135" stroke="#52514e" stroke-width="1.5" marker-end="url(#ar)"/>
+          <line x1="610" y1="163" x2="565" y2="163" stroke="#52514e" stroke-width="1.5" marker-end="url(#ar)"/>
+          <line x1="410" y1="163" x2="365" y2="163" stroke="#52514e" stroke-width="1.5" marker-end="url(#ar)"/>
+          <line x1="160" y1="163" x2="205" y2="163" stroke="#52514e" stroke-width="1.5" marker-end="url(#ar)"/>
+          <line x1="285" y1="140" x2="285" y2="80" stroke="#52514e" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#ar)"/>
+          <text x="300" y="115" font-size="11" fill="#52514e">publishes new model version</text>
+        </g>
+      </svg>
+      <figcaption>System context. The 835 remittance stream is the continuous label source; retraining publishes versioned models behind backtest gates.</figcaption>
+    </div>
+    <h3>2.2 Data contract at scoring time</h3>
+    <table class="t">
+      <tr><th>Field group</th><th>Fields (MVP)</th><th>Source</th><th>Freshness need</th></tr>
+      <tr><td>Claim core</td><td>payer, specialty, CPT, ICD-10, modifiers, charge, service date, submission lag</td><td>PM claims DB</td><td>at save</td></tr>
+      <tr><td>Eligibility</td><td>verified flag, last verification date, coverage status</td><td>270/271 service</td><td>&lt; 24 h</td></tr>
+      <tr><td>Prior auth</td><td>required flag (payer rules table), auth on file</td><td>PA module + payer rules</td><td>&lt; 24 h</td></tr>
+      <tr><td>Payer rules</td><td>timely filing limit, modifier requirements</td><td>payer rules table</td><td>weekly review</td></tr>
+      <tr><td>History</td><td>resubmission flag, prior denials on patient/payer pair</td><td>claims history</td><td>nightly</td></tr>
+    </table>
+    <h3>2.3 Model serving <span class="eng">ENG TO CONFIRM</span></h3>
+    <ul>
+      <li>Product's starting point: nightly batch rescoring of the whole pre-submission queue plus on-demand scoring on claim save. Model artifact is small (15 weights for MVP); a stateless service or even in-process scoring both plausible. <span class="eng">ENG TO CONFIRM</span> serving pattern, capacity, and cold-start behaviour.</li>
+      <li>Versioning: every score logs model version; shadow-mode support (score-but-do-not-display) required for new versions. Rollback to previous version in one config change.</li>
+      <li>Failure mode: scoring down means queue renders unscored with a visible banner. Never block submission.</li>
+    </ul>
+    <h3>2.4 Feedback event schema (proposed)</h3>
+<pre class="code">{
+  "event": "fix_applied | fix_undone | override | outcome_835",
+  "claim_id": "CLM-2026-04687",
+  "model_version": "denial-risk-v0.9.2",
+  "risk_before": 0.93, "risk_after": 0.55,
+  "gap_type": "pa_gap",
+  "actor": "user:biller_142 | system:835_ingest",
+  "outcome": { "status": "denied", "carc": "CO-197" },   // 835 events only
+  "ts": "2026-07-14T09:12:33Z"
+}</pre>
+    <h3>2.5 Retraining and deployment <span class="eng">ENG TO CONFIRM</span></h3>
+    <ul>
+      <li>Triggers: scheduled monthly, plus alarm-driven when weekly per-payer calibration error exceeds the agreed band for 2 consecutive weeks.</li>
+      <li>Gates: temporal backtest must clear AUC and per-payer recall floors (Section 4.1) before a version can leave shadow mode. Human approval on every promotion during alpha and beta.</li>
+      <li><span class="eng">ENG TO CONFIRM</span>: pipeline tooling, feature-store choice, canary strategy per practice cohort.</li>
+    </ul>
+    <h3>2.6 Security, privacy, compliance</h3>
+    <ul>
+      <li>Features are claim-metadata level; no clinical notes in the MVP feature set. All the same, claims data is PHI: BAA coverage, encryption in transit and at rest, minimum-necessary access, and full audit logging are entry criteria, not enhancements.</li>
+      <li>Model outputs (scores, factors) are treated as PHI-derived data with the same access controls as the claim itself.</li>
+      <li><span class="eng">ENG TO CONFIRM</span>: threat model review, retention windows per artifact, de-identification standard for the training store.</li>
+    </ul>
+    <h3>2.7 Open engineering questions</h3>
+    <table class="t">
+      <tr><th>#</th><th>Question</th><th>Product's starting position</th><th>Owner</th></tr>
+      <tr><td>Q1</td><td>Score on save vs batch-only for MVP?</td><td>Both; on-save matters because billers edit and expect the number to move</td><td><span class="eng">ENG</span></td></tr>
+      <tr><td>Q2</td><td>Where do payer rules (timely filing, modifier requirements) live today, and who maintains them?</td><td>Assume existing rules table; needs an owner and a weekly review loop</td><td>Product + <span class="eng">ENG</span></td></tr>
+      <tr><td>Q3</td><td>Can the eligibility (270/271) service be triggered per claim on demand, and at what cost per check?</td><td>Assumed yes; cost per check shapes the fix economics</td><td><span class="eng">ENG</span></td></tr>
+      <tr><td>Q4</td><td>Event bus vs direct writes for feedback events?</td><td>No position; whatever the platform standard is</td><td><span class="eng">ENG</span></td></tr>
+    </table>
+
+    <!-- ==================== 3. DESIGN ==================== -->
+    <h2>3. Design prototype &amp; design requirements</h2>
+    <h3>3.1 Design principles</h3>
+    <ol>
+      <li><b>Explain before you automate.</b> No score without its reasons, in biller language. Jargon always carries a hover definition.</li>
+      <li><b>One primary action per flag.</b> The suggested fix is a single button; everything else is secondary.</li>
+      <li><b>Undo everywhere.</b> Any applied action is reversible in one click. Safety produces adoption.</li>
+      <li><b>Respect disagreement.</b> Override is one click, never nagged, and framed as feedback rather than failure.</li>
+      <li><b>Show the cost of being wrong.</b> The threshold screen shows workload and missed-denial trade-offs honestly.</li>
+    </ol>
+    <h3>3.2 Wireframes</h3>
+    <div class="wire">
+      <svg viewBox="0 0 900 300" width="100%" style="min-width:700px">
+        <g font-size="11" font-family="system-ui" fill="#52514e">
+          <rect x="8" y="8" width="884" height="40" rx="6" fill="#e8eef7"/><text x="24" y="32" font-weight="700" fill="#0b0b0b">Co-Pilot · pre-submission queue</text><rect x="700" y="16" width="180" height="24" rx="12" fill="#fcfcfb" stroke="#c3c2b7"/><text x="790" y="32" text-anchor="middle">session counters</text>
+          <rect x="8" y="58" width="500" height="234" rx="6" fill="#fcfcfb" stroke="#c3c2b7"/>
+          <text x="24" y="80" font-weight="650" fill="#0b0b0b">Queue (sorted by risk)</text>
+          <g>
+            <rect x="20" y="92" width="476" height="30" rx="4" fill="#cde2fb"/><rect x="28" y="99" width="44" height="16" rx="8" fill="#d03b3b"/><text x="50" y="111" fill="#fff" text-anchor="middle" font-weight="700">93%</text><text x="86" y="111">CLM-04687 · Medicaid · 66984 · $1,973</text>
+            <rect x="20" y="128" width="476" height="30" rx="4" fill="#fff" stroke="#e1e0d9"/><rect x="28" y="135" width="44" height="16" rx="8" fill="#ec835a"/><text x="50" y="147" fill="#fff" text-anchor="middle" font-weight="700">41%</text><text x="86" y="147">CLM-02909 · BlueShield · 96910 · $111</text>
+            <rect x="20" y="164" width="476" height="30" rx="4" fill="#fff" stroke="#e1e0d9"/><rect x="28" y="171" width="44" height="16" rx="8" fill="#fab219"/><text x="50" y="183" fill="#fff" text-anchor="middle" font-weight="700">18%</text><text x="86" y="183">CLM-00641 · Medicare · 29881 · $2,870</text>
+            <rect x="20" y="200" width="476" height="30" rx="4" fill="#fff" stroke="#e1e0d9"/><rect x="28" y="207" width="44" height="16" rx="8" fill="#0ca30c"/><text x="50" y="219" fill="#fff" text-anchor="middle" font-weight="700">5%</text><text x="86" y="219">CLM-01161 · Medicare · 17000 · $150</text>
+          </g>
+          <rect x="522" y="58" width="370" height="234" rx="6" fill="#fcfcfb" stroke="#c3c2b7"/>
+          <text x="538" y="80" font-weight="650" fill="#0b0b0b">Claim detail</text>
+          <text x="538" y="100">risk gauge + band</text><rect x="640" y="90" width="180" height="12" rx="6" fill="#e1e0d9"/><rect x="640" y="90" width="120" height="12" rx="6" fill="#d03b3b"/>
+          <text x="538" y="126">why flagged: factor bars (weights)</text>
+          <rect x="538" y="134" width="240" height="8" rx="4" fill="#ec835a"/><rect x="538" y="148" width="170" height="8" rx="4" fill="#ec835a"/><rect x="538" y="162" width="90" height="8" rx="4" fill="#ec835a"/>
+          <rect x="538" y="182" width="336" height="26" rx="4" fill="#fdeae2"/><text x="546" y="199">predicted denial: CO-197 (no prior auth)</text>
+          <rect x="538" y="216" width="200" height="26" rx="6" fill="#2a78d6"/><text x="638" y="233" fill="#fff" text-anchor="middle" font-weight="700">Apply fix</text>
+          <rect x="748" y="216" width="70" height="26" rx="6" fill="#fff" stroke="#c3c2b7"/><text x="783" y="233" text-anchor="middle">Undo</text>
+          <rect x="538" y="252" width="150" height="24" rx="6" fill="#fff" stroke="#c3c2b7"/><text x="613" y="268" text-anchor="middle">Override: submit as-is</text>
+        </g>
+      </svg>
+      <figcaption>W1 · Desktop: queue + detail two-pane. Risk is always a number plus a band label, never color alone.</figcaption>
+    </div>
+    <div class="wire">
+      <svg viewBox="0 0 900 190" width="100%" style="min-width:700px">
+        <g font-size="11" font-family="system-ui" fill="#52514e">
+          <rect x="8" y="8" width="430" height="174" rx="6" fill="#fcfcfb" stroke="#c3c2b7"/>
+          <text x="24" y="32" font-weight="650" fill="#0b0b0b">Threshold setting (billing manager)</text>
+          <rect x="24" y="48" width="390" height="8" rx="4" fill="#e1e0d9"/><circle cx="180" cy="52" r="9" fill="#2a78d6"/>
+          <text x="24" y="84">flags/day: 17 · review: ~68 min · recall: 59%</text>
+          <text x="24" y="104">est. protected: $46k/mo</text>
+          <rect x="24" y="120" width="130" height="26" rx="6" fill="#2a78d6"/><text x="89" y="137" fill="#fff" text-anchor="middle" font-weight="700">Save</text>
+          <text x="24" y="168" font-style="italic">live preview before commit (US-5)</text>
+          <rect x="470" y="8" width="180" height="174" rx="10" fill="#fcfcfb" stroke="#c3c2b7"/>
+          <text x="560" y="30" text-anchor="middle" font-weight="650" fill="#0b0b0b">Mobile</text>
+          <rect x="482" y="40" width="156" height="24" rx="4" fill="#e8eef7"/><text x="560" y="56" text-anchor="middle">queue (stacked)</text>
+          <rect x="482" y="70" width="156" height="30" rx="4" fill="#cde2fb"/><rect x="482" y="106" width="156" height="30" rx="4" fill="#fff" stroke="#e1e0d9"/>
+          <rect x="482" y="142" width="156" height="32" rx="4" fill="#fdeae2"/><text x="560" y="162" text-anchor="middle">tap → detail scrolls into view</text>
+          <rect x="680" y="8" width="212" height="174" rx="6" fill="#fcfcfb" stroke="#c3c2b7"/>
+          <text x="696" y="32" font-weight="650" fill="#0b0b0b">States</text>
+          <text x="696" y="56">· all clear: "0 flags today" + tally</text>
+          <text x="696" y="76">· scoring down: unscored banner,</text><text x="704" y="92">queue still usable (fail open)</text>
+          <text x="696" y="112">· empty queue: next batch ETA</text>
+          <text x="696" y="132">· loading: skeleton rows</text>
+          <text x="696" y="152">· error: retry + support path</text>
+        </g>
+      </svg>
+      <figcaption>W2 · Threshold configuration, mobile behaviour, and required UI states.</figcaption>
+    </div>
+    <h3>3.3 Design requirements</h3>
+    <ul>
+      <li>Risk bands: Low &lt;10%, Moderate 10 to 25%, Elevated 25 to 50%, High ≥50%; band thresholds are display constants, distinct from the operating threshold.</li>
+      <li>Factor list is ordered by contribution and capped at what fits without scrolling on desktop; the full list expands on demand.</li>
+      <li>Every billing term carries a hover definition sourced from one shared glossary; on touch devices, definitions live behind an info affordance.</li>
+      <li>All charts and gauges size to their container; the product must be fully usable at 375 px width and at 1440 px+ without dead space.</li>
+      <li>The live prototype (<a href="../copilot/">demo</a>) is the hi-fi reference for interaction behaviour; visual design tokens to be aligned with the NewMed design system at implementation.</li>
+    </ul>
+
+    <!-- ==================== 4. EVALS & QA ==================== -->
+    <h2>4. Evaluations &amp; QA</h2>
+    <h3>4.1 Offline evaluation protocol (pre-ship gate)</h3>
+    <ul>
+      <li><b>Temporal backtest only.</b> Train on the past, test on the future (current prototype: trained Jan to Apr 2026, tested May to Jun). Random splits are prohibited: payer rules drift and random splits leak future behaviour into training.</li>
+      <li><b>Current prototype results:</b> AUC 0.853 on 2,008 unseen claims (16.2% base rate). At the default 30% threshold: precision 54%, recall 59%, 17.6% of claims flagged. Synthetic-data caveat: these numbers demonstrate the method; real-world targets get re-baselined per payer in alpha.</li>
+      <li><b>Ship gates per model version:</b> AUC &gt; 0.80 overall; recall floor per major payer; calibration reviewed (a claim shown as 70% should deny about 70% of the time before GA).</li>
+    </ul>
+    <h3>4.2 Online evaluation (alpha and beta)</h3>
+    <table class="t">
+      <tr><th>Phase</th><th>Design</th><th>Gate to advance</th></tr>
+      <tr><td>Alpha</td><td>3 to 5 practices, one specialty; 100% human review of flags; weekly calibration vs actual 835s</td><td>Acceptance &gt; 60%; override &lt; 20%; no workflow regression reported</td></tr>
+      <tr><td>Beta</td><td>Expand payers before specialties; matched control practices for lift measurement</td><td>Clean-claim-rate lift visible vs control; per-payer precision stable 4 weeks</td></tr>
+      <tr><td>GA</td><td>Per-practice ROI reporting on; continuous retraining on</td><td>Lift sustained 2 quarters</td></tr>
+    </table>
+    <h3>4.3 QA plan</h3>
+    <ul>
+      <li><b>Model QA:</b> scoring parity test between training code and serving code on a golden claim set (the prototype ships exactly this: Python trains, JavaScript serves, same weights, asserted equal). Feature-drift tests on every input field.</li>
+      <li><b>Data QA:</b> fan-out checks (claims join to payers 1:1; line-item joins pre-aggregated to claim grain), duplicate claim detection, NULL-safe rate calculations, date-bucketing by service date not submission date.</li>
+      <li><b>UX QA:</b> apply/undo/override state machine covered by automated tests; counters always reconcile; the fail-open unscored state renders correctly; WCAG 2.1 AA audit.</li>
+      <li><b>Regression pack:</b> golden queue snapshot re-scored on every model or code change; alert on any claim whose band changes without a data change.</li>
+    </ul>
+    <h3>4.4 Production monitoring</h3>
+    <table class="t">
+      <tr><th>Signal</th><th>Cadence</th><th>Action trigger</th></tr>
+      <tr><td>Per-payer precision and recall vs actual 835s</td><td>weekly</td><td>&gt;10-point calibration error 2 weeks running → retrain</td></tr>
+      <tr><td>Fix-suggestion acceptance rate</td><td>weekly</td><td>&lt;60% → review suggestion quality per denial category</td></tr>
+      <tr><td>Override rate</td><td>weekly</td><td>&gt;20% or rising → threshold and feature review with alpha practices</td></tr>
+      <tr><td>New dominant CARC per payer</td><td>continuous</td><td>feature/rule gap analysis</td></tr>
+      <tr><td>Automation-bias audit (sampled re-review of accepted fixes)</td><td>monthly</td><td>error rate above baseline → raise mandatory-review share</td></tr>
+      <tr><td>Clean-claim rate vs matched controls</td><td>monthly</td><td>flat after 2 quarters → revisit product, not just model</td></tr>
+    </table>
+    <h3>4.5 Model risk register</h3>
+    <table class="t">
+      <tr><th>Risk</th><th>Mitigation</th></tr>
+      <tr><td>Payer rule drift</td><td>Weekly calibration monitoring; 835 stream as continuous labels; alarm-driven retraining</td></tr>
+      <tr><td>Automation bias (rubber-stamping)</td><td>Sampled mandatory review; undo prominence; acceptance-quality audits</td></tr>
+      <tr><td>False-positive fatigue</td><td>Per-practice threshold tied to capacity; precision floors per payer</td></tr>
+      <tr><td>Cold start (small payers/specialties)</td><td>Fall back to pooled cross-specialty payer patterns until volume accrues</td></tr>
+      <tr><td>PHI exposure</td><td>Metadata-only features; PHI-derived outputs inherit claim access controls; audit logging</td></tr>
+    </table>
+
+    <h2>Appendix</h2>
+    <p><b>A. Companion product.</b> The Practice Ops Bottleneck Analyzer (<a href="../ops/">live demo</a>) applies the same discovery method to operational task data: rank each practice's manual-effort sinks and pair every bottleneck with an automation recommendation and a quantified saving.</p>
+    <p><b>B. Source and reproducibility.</b> Everything regenerates from code: <a href="https://github.com/nayanlal029/portfolio-projects-newmed" target="_blank">github.com/nayanlal029/portfolio-projects-newmed</a>. The claims warehouse, the SQL discovery pack, model training, and this document's numbers are one <code>python3 run_pipeline.py</code> away.</p>
+    <p style="margin-top:18px;color:var(--muted);font-size:12.5px">NewMed is a fictional platform; all data is synthetic. Prepared by Nayan Lal, July 2026.</p>
+  </article>
+</div></div>
+
+<script>
+const CODE = 'NEWMED-2026';
+const gate = document.getElementById('gate'), doc = document.getElementById('doc');
+function unlock() { gate.style.display='none'; doc.style.display='block'; localStorage.setItem('newmed_prd','1'); window.scrollTo(0,0); }
+function lockDoc() { localStorage.removeItem('newmed_prd'); doc.style.display='none'; gate.style.display='grid'; window.scrollTo(0,0); }
+if (localStorage.getItem('newmed_prd')==='1') unlock();
+
+document.getElementById('codeBtn').addEventListener('click', () => {
+  const v = document.getElementById('code').value.trim().toUpperCase();
+  const msg = document.getElementById('codeMsg');
+  if (v === CODE) { msg.className='msg ok'; msg.textContent='Unlocked.'; setTimeout(unlock, 300); }
+  else { msg.className='msg err'; msg.textContent='That code is not valid. Use the request form and I will send you one.'; }
+});
+document.getElementById('code').addEventListener('keydown', e => { if (e.key==='Enter') document.getElementById('codeBtn').click(); });
+
+document.getElementById('reqForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const msg = document.getElementById('reqMsg');
+  const data = new FormData(e.target);
+  try {
+    const r = await fetch('https://formspree.io/f/xzdnbrqa', { method:'POST', body:data, headers:{ 'Accept':'application/json' } });
+    if (r.ok) { msg.className='msg ok'; msg.textContent='Request sent. I will get back to you with an access code shortly.'; e.target.reset(); }
+    else { msg.className='msg err'; msg.textContent='Something went wrong sending the request. You can also email me directly: nayanlal1909@gmail.com'; }
+  } catch {
+    msg.className='msg err'; msg.textContent='Network error. You can also email me directly: nayanlal1909@gmail.com';
+  }
+});
+</script>
+</body>
+</html>

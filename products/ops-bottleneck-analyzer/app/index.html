@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NewMed · Practice Ops Bottleneck Analyzer</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface:#fcfcfb; --plane:#f4f4f1; --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+    --grid:#e1e0d9; --baseline:#c3c2b7; --ring:rgba(11,11,11,0.10);
+    --blue:#2a78d6; --blue-deep:#1c5cab; --blue-100:#cde2fb;
+    --aqua:#1baf7a; --yellow:#eda100; --violet:#4a3aa7;
+    --good:#0ca30c; --good-text:#006300; --serious:#ec835a;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--plane); color:var(--ink); font-size:15px; line-height:1.55; }
+  header { background:linear-gradient(120deg,#3b2d85,#4a3aa7 55%,#5a49c4); color:#fff; padding:24px 32px; }
+  .shell { max-width:1460px; margin:0 auto; }
+  .brand { display:flex; align-items:center; gap:12px; }
+  .brand .mark { width:38px; height:38px; border-radius:9px; background:#fff; display:grid; place-items:center; }
+  .brand h1 { font-size:20px; font-weight:650; }
+  .brand h1 span { opacity:0.75; font-weight:450; }
+  .tagline { margin:8px 0 0 50px; font-size:13.5px; opacity:0.88; max-width:760px; }
+  .synth { display:inline-block; margin-left:10px; padding:2px 9px; border-radius:999px; background:rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.35); font-size:11px; letter-spacing:0.06em; vertical-align:2px; }
+  main { max-width:1460px; margin:0 auto; padding:24px 32px 60px; }
+  .card { background:var(--surface); border:1px solid var(--ring); border-radius:10px; padding:18px 20px; }
+  h2 { font-size:18px; letter-spacing:-0.2px; }
+  h3 { font-size:15px; }
+  .lede { color:var(--ink-2); font-size:14px; max-width:880px; margin:6px 0 16px; }
+
+  .filters { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
+  .filters button { border:1px solid var(--baseline); background:var(--surface); border-radius:999px; padding:7px 14px; font-size:13px; cursor:pointer; font-family:inherit; color:var(--ink-2); }
+  .filters button:hover { border-color:var(--violet); color:var(--violet); }
+  .filters button.active { background:var(--violet); border-color:var(--violet); color:#fff; font-weight:600; }
+
+  .tiles { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin-bottom:20px; }
+  .tile .label { font-size:12.5px; color:var(--muted); font-weight:550; }
+  .tile .value { font-size:28px; font-weight:650; letter-spacing:-0.5px; margin:2px 0; font-variant-numeric:tabular-nums; }
+  .tile .note { font-size:12.5px; color:var(--ink-2); }
+
+  .grid2 { display:grid; grid-template-columns:1.2fr 1fr; gap:18px; align-items:start; margin-bottom:20px; }
+  @media (max-width:950px){ .grid2 { grid-template-columns:1fr; } }
+  .chart-wrap { overflow-x:auto; margin-top:10px; }
+  svg text { font-family:inherit; }
+  .bar-hit:hover rect.bar { opacity:0.82; }
+
+  .top3 { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:14px; margin-bottom:20px; }
+  .b-card { border-top:4px solid var(--serious); position:relative; }
+  .b-card .rank { position:absolute; top:14px; right:16px; font-size:26px; font-weight:750; color:var(--grid); }
+  .b-card h4 { font-size:14.5px; padding-right:34px; }
+  .b-card .hrs { font-size:24px; font-weight:700; margin:6px 0 2px; font-variant-numeric:tabular-nums; }
+  .b-card .cost { font-size:12.5px; color:var(--muted); }
+  .b-card .rec { margin-top:10px; font-size:13px; background:var(--plane); border-radius:7px; padding:9px 12px; }
+  .b-card .cap { display:inline-block; margin-top:8px; font-size:11.5px; font-weight:650; color:var(--blue-deep); background:var(--blue-100); border-radius:999px; padding:3px 10px; }
+
+  input[type=range]{ width:100%; accent-color:var(--violet); }
+  .whatif-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-top:12px; }
+  details.sql summary { cursor:pointer; font-size:13px; color:var(--ink-2); font-weight:550; }
+  pre.sql { background:#221c4d; color:#d9d3f7; border-radius:8px; padding:14px 16px; overflow-x:auto; font-size:12.5px; line-height:1.5; margin-top:8px; }
+  footer { text-align:center; color:var(--muted); font-size:12.5px; padding:18px; }
+  #tooltip { position:fixed; pointer-events:none; background:var(--ink); color:#fff; font-size:12.5px; padding:6px 10px; border-radius:6px; opacity:0; transition:opacity 0.12s; z-index:50; max-width:280px; }
+  @media (max-width:640px) {
+    body { font-size:14px; }
+    header { padding:16px 14px; }
+    .brand .mark { width:32px; height:32px; }
+    .brand h1 { font-size:16.5px; }
+    .tagline { margin-left:0; font-size:12.5px; }
+    main { padding:16px 14px 48px; }
+    .card { padding:14px 14px; }
+    .tile .value { font-size:23px; }
+    .filters button { padding:6px 11px; font-size:12px; }
+    .b-card .hrs { font-size:20px; }
+    h2 { font-size:16.5px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="shell">
+    <div class="brand">
+      <div class="mark"><svg width="22" height="22" viewBox="0 0 24 24" aria-label="NewMed"><rect x="9.2" y="2.5" width="5.6" height="19" rx="2.4" fill="#4a3aa7"/><rect x="2.5" y="9.2" width="19" height="5.6" rx="2.4" fill="#4a3aa7"/><rect x="9.2" y="9.2" width="5.6" height="5.6" fill="#6a59d4"/></svg></div>
+      <h1>NewMed <span>· Practice Ops Bottleneck Analyzer</span></h1>
+    </div>
+    <p class="tagline">Practices know they're busy. They don't know <b>where the hours go</b>. This mines 13 weeks of operational task events, ranks each practice's manual-effort sinks, and quantifies what automation would return. <span class="synth">SYNTHETIC DATA · PROTOTYPE</span></p>
+  </div>
+</header>
+
+<main>
+  <div class="filters" id="practice-filter"></div>
+  <div class="tiles" id="tiles"></div>
+
+  <h2 id="top3-title">Top 3 bottlenecks</h2>
+  <p class="lede">Ranked by monthly manual hours. Each card pairs the finding with the automation that addresses it and the hours it could return, because a bottleneck without a recommendation is just a complaint.</p>
+  <div class="top3" id="top3"></div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>Manual hours per month, by task</h3>
+      <div class="chart-wrap" id="c-task"></div>
+      <p style="font-size:12px;color:var(--muted);margin-top:6px">Bar length = hours/month. <span style="color:var(--violet);font-weight:650">Purple</span> = share technology can absorb (automatable); gray = residual human work.</p>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:18px">
+        <h3>Weekly manual hours (13 weeks, all tasks)</h3>
+        <div class="chart-wrap" id="c-trend"></div>
+      </div>
+      <div class="card">
+        <h3>Where the labour cost sits, by role</h3>
+        <div class="chart-wrap" id="c-role"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px">
+    <h2>What-if: automation adoption</h2>
+    <p class="lede" style="margin-bottom:8px">Automation never captures 100% of a task: each task has a realistic automatable share (65-90% for scheduling, intake and eligibility; about 50-60% where judgement stays human, like denial rework and billing questions). Drag adoption to model a rollout.</p>
+    <h3>Adoption across automatable work: <span id="adopt-label" style="color:var(--violet)">60%</span></h3>
+    <input type="range" id="adopt" min="0" max="100" value="60" step="5">
+    <div class="whatif-grid" id="whatif"></div>
+    <p style="font-size:12px;color:var(--muted);margin-top:8px">FTE = 160 hours/month. Savings use per-role hourly rates (front desk $22, billing $28, clinical $35, admin $30). Freed hours are capacity for patient-facing work, not necessarily headcount reduction. That framing decides whether practice staff adopt or resist the rollout.</p>
+  </div>
+
+  <div class="card">
+    <h3>Methodology</h3>
+    <p style="font-size:13.5px;color:var(--ink-2);margin-top:6px">A 13-week task-event log (6,000+ daily aggregates across 8 practices, 12 task types, 4 staff roles) is loaded into SQLite and analyzed in SQL: the same instrument-then-aggregate approach I used to find 100+ hours/month of reporting effort at a previous client. Each practice's bottleneck profile differs (a GI center drowns in prior-auth; a dermatology front desk in scheduling calls), which is why the recommendation engine is per-practice, not one-size-fits-all.</p>
+    <details class="sql" style="margin-top:10px"><summary>Show the core SQL</summary><pre class="sql" id="sql-block"></pre></details>
+  </div>
+</main>
+<footer>NewMed Practice Ops Bottleneck Analyzer · product prototype by Nayan Lal · all data synthetic (<code>pipeline.py</code>)</footer>
+<div id="tooltip"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const fmt$ = n => '$' + Math.round(n).toLocaleString('en-US');
+const fmtH = n => Math.round(n).toLocaleString('en-US');
+const tip = $('#tooltip');
+function bindTips(root){ root.querySelectorAll('[data-tip]').forEach(el=>{
+  el.addEventListener('mousemove',e=>{ tip.textContent=el.dataset.tip; tip.style.opacity=1;
+    tip.style.left=Math.min(e.clientX+14,innerWidth-300)+'px'; tip.style.top=(e.clientY+14)+'px';});
+  el.addEventListener('mouseleave',()=>tip.style.opacity=0);});}
+
+function chartWidth(el, min=320, max=1280) {
+  const w = el.clientWidth || el.parentElement.clientWidth || 0;
+  return w > 60 ? Math.max(min, Math.min(max, w)) : 0;
+}
+function wrapLabel(text, maxChars) {
+  if (text.length <= maxChars) return [text];
+  const mid = Math.floor(text.length/2); let cut = -1;
+  for (let i=0;i<text.length;i++) if (text[i]===' ' && Math.abs(i-mid)<Math.abs(cut-mid)) cut=i;
+  if (cut<0) return [text.slice(0,maxChars-1)+'…'];
+  let l2 = text.slice(cut+1); if (l2.length>maxChars) l2 = l2.slice(0,maxChars-1)+'…';
+  return [text.slice(0,cut), l2];
+}
+function labelText(lines, x, y, bh, size) {
+  return lines.length===1
+    ? `<text x="${x}" y="${y+bh/2+4}" text-anchor="end" font-size="${size}" fill="var(--ink-2)">${lines[0]}</text>`
+    : `<text x="${x}" y="${y+bh/2-2}" text-anchor="end" font-size="${size-0.5}" fill="var(--ink-2)">${lines[0]}<tspan x="${x}" dy="12">${lines[1]}</tspan></text>`;
+}
+function hbarSplit(el, rows) { // stacked automatable/residual
+  const W = chartWidth(el); if (!W) { el.innerHTML=''; return; }
+  const bh=24, gap=9, lw=Math.max(140, Math.min(240, W*0.30)), maxChars=Math.floor(lw/6.3);
+  const M=Math.max(...rows.map(r=>r.hours))*1.12, h=rows.length*(bh+gap);
+  let s=`<svg width="${W}" height="${h}">`;
+  rows.forEach((r,i)=>{
+    const y=i*(bh+gap), full=(r.hours/M)*(W-lw-64), aw=full*r.auto;
+    s+=`<g class="bar-hit" data-tip="${r.task}: ${fmtH(r.hours)} h/mo · ${fmt$(r.cost)}/mo · ${Math.round(r.auto*100)}% automatable · ${r.role}">
+      ${labelText(wrapLabel(r.task, maxChars), lw-8, y, bh, 12)}
+      <rect class="bar" x="${lw}" y="${y}" width="${aw}" height="${bh}" rx="4" fill="var(--violet)"/>
+      <rect class="bar" x="${lw+aw+2}" y="${y}" width="${Math.max(0,full-aw-2)}" height="${bh}" rx="4" fill="var(--baseline)"/>
+      <text x="${lw+full+8}" y="${y+bh/2+4}" font-size="12" font-weight="600">${fmtH(r.hours)}h</text></g>`;
+  });
+  el.innerHTML=s+'</svg>'; bindTips(el);
+}
+function hbar(el, rows, {valKey,labelKey,fmt,color='var(--blue)',tipFn}) {
+  const W = chartWidth(el, 280, 900); if (!W) { el.innerHTML=''; return; }
+  const bh=24, gap=9, lw=Math.max(100, Math.min(160, W*0.26)), maxChars=Math.floor(lw/6.3);
+  const M=Math.max(...rows.map(r=>r[valKey]))*1.15, h=rows.length*(bh+gap);
+  let s=`<svg width="${W}" height="${h}">`;
+  rows.forEach((r,i)=>{ const y=i*(bh+gap), bw=(r[valKey]/M)*(W-lw-80);
+    s+=`<g class="bar-hit" data-tip="${tipFn?tipFn(r):''}">
+      ${labelText(wrapLabel(String(r[labelKey]), maxChars), lw-8, y, bh, 12)}
+      <rect class="bar" x="${lw}" y="${y}" width="${bw}" height="${bh}" rx="4" fill="${color}"/>
+      <text x="${lw+bw+8}" y="${y+bh/2+4}" font-size="12" font-weight="600">${fmt(r[valKey])}</text></g>`;});
+  el.innerHTML=s+'</svg>'; bindTips(el);
+}
+function lineChart(el, data, {height=180,yfmt=v=>v,xlabels}) {
+  const W = chartWidth(el, 280, 900); if (!W) { el.innerHTML=''; return; }
+  const padL=52,padR=12,padT=12,padB=24,IW=W-padL-padR,H=height-padT-padB;
+  const M=Math.max(...data)*1.15, X=i=>padL+i*IW/(data.length-1), Y=v=>padT+H-(v/M)*H;
+  let s=`<svg width="${W}" height="${height}">`;
+  for(let g=0;g<=3;g++){const v=M*g/3;
+    s+=`<line x1="${padL}" y1="${Y(v)}" x2="${W-padR}" y2="${Y(v)}" stroke="var(--grid)"/>
+        <text x="${padL-6}" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="var(--muted)">${yfmt(v)}</text>`;}
+  s+=`<polyline points="${data.map((v,i)=>X(i)+','+Y(v)).join(' ')}" fill="none" stroke="var(--violet)" stroke-width="2"/>`;
+  data.forEach((v,i)=>{s+=`<circle cx="${X(i)}" cy="${Y(v)}" r="3.5" fill="var(--violet)" data-tip="Week ${xlabels[i]}: ${yfmt(v)}"/>`;});
+  xlabels.forEach((l,i)=>{ if(i%2===0) s+=`<text x="${X(i)}" y="${height-6}" text-anchor="middle" font-size="11" fill="var(--muted)">${l}</text>`;});
+  el.innerHTML=s+'</svg>'; bindTips(el);
+}
+
+fetch('data.json').then(r=>r.json()).then(D=>{
+  let sel='ALL';
+  const FTE=160;
+
+  $('#practice-filter').innerHTML =
+    `<button data-p="ALL" class="active">All practices (8)</button>` +
+    D.practices.map(p=>`<button data-p="${p.id}">${p.name.replace('Lakeview ','')}</button>`).join('');
+  $('#practice-filter').addEventListener('click', e=>{
+    const b=e.target.closest('button'); if(!b) return; sel=b.dataset.p;
+    document.querySelectorAll('#practice-filter button').forEach(x=>x.classList.toggle('active',x===b));
+    render();
+  });
+  $('#sql-block').textContent = D.sql.by_task.trim() + '\n\n' + D.sql.role_mix.trim();
+  $('#adopt').addEventListener('input', render);
+  let rT; window.addEventListener('resize', ()=>{ clearTimeout(rT); rT=setTimeout(render, 160); });
+
+  function taskRows(){
+    const filtered = D.by_task.filter(r=>sel==='ALL'||r.practice_id===sel);
+    const agg={};
+    filtered.forEach(r=>{
+      agg[r.task] = agg[r.task]||{task:r.task, hours:0, cost:0, role:r.role,
+        auto:D.task_meta[r.task].automatable, rec:D.task_meta[r.task].recommendation, cap:D.task_meta[r.task].capability};
+      agg[r.task].hours+=r.hours_per_month; agg[r.task].cost+=r.cost_per_month;
+    });
+    return Object.values(agg).sort((a,b)=>b.hours-a.hours);
+  }
+
+  function render(){
+    const rows=taskRows();
+    const totH=rows.reduce((s,r)=>s+r.hours,0), totC=rows.reduce((s,r)=>s+r.cost,0);
+    const autoH=rows.reduce((s,r)=>s+r.hours*r.auto,0);
+    const name = sel==='ALL'?'All practices':D.practices.find(p=>p.id===sel).name;
+
+    $('#tiles').innerHTML=[
+      ['Manual hours / month', fmtH(totH)+' h', name],
+      ['Labour cost / month', fmt$(totC), 'at per-role hourly rates'],
+      ['FTE equivalent', (totH/FTE).toFixed(1), 'full-time staff absorbed by manual ops'],
+      ['Technically automatable', Math.round(autoH/totH*100)+'%', fmtH(autoH)+' h/mo within reach of automation'],
+    ].map(([l,v,n])=>`<div class="card tile"><div class="label">${l}</div><div class="value">${v}</div><div class="note">${n}</div></div>`).join('');
+
+    $('#top3-title').textContent = `Top 3 bottlenecks: ${name}`;
+    $('#top3').innerHTML = rows.slice(0,3).map((r,i)=>`
+      <div class="card b-card"><div class="rank">#${i+1}</div>
+        <h4>${r.task}</h4>
+        <div class="hrs">${fmtH(r.hours)} h/mo</div>
+        <div class="cost">${fmt$(r.cost)}/mo · ${r.role} · ${Math.round(r.auto*100)}% automatable</div>
+        <div class="rec"><b>Recommendation:</b> ${r.rec}</div>
+        <span class="cap">${r.cap}</span>
+      </div>`).join('');
+
+    hbarSplit($('#c-task'), rows);
+    lineChart($('#c-trend'),
+      D.weekly_trend.map(w=>w.hours * (sel==='ALL'?1:totH/ (D.by_task.reduce((s,r)=>s+r.hours_per_month,0)))),
+      {yfmt:v=>fmtH(v)+'h', xlabels:D.weekly_trend.map(w=>'W'+w.week)});
+    const roleAgg = {};
+    D.by_task.filter(r=>sel==='ALL'||r.practice_id===sel).forEach(r=>{
+      roleAgg[r.role] = roleAgg[r.role]||{role:r.role, cost_per_month:0, hours_per_month:0};
+      roleAgg[r.role].cost_per_month += r.cost_per_month;
+      roleAgg[r.role].hours_per_month += r.hours_per_month;
+    });
+    hbar($('#c-role'), Object.values(roleAgg).sort((a,b)=>b.cost_per_month-a.cost_per_month),
+      {valKey:'cost_per_month', labelKey:'role', fmt:fmt$, color:'var(--aqua)',
+       tipFn:r=>`${r.role}: ${fmtH(r.hours_per_month)} h/mo (${sel==='ALL'?'all practices':name})`});
+
+    const adopt=$('#adopt').value/100;
+    $('#adopt-label').textContent=Math.round(adopt*100)+'%';
+    const savedH=autoH*adopt;
+    const savedC=rows.reduce((s,r)=>s+r.cost*r.auto,0)*adopt;
+    $('#whatif').innerHTML=[
+      ['Hours returned / month', fmtH(savedH)+' h'],
+      ['Labour value / month', fmt$(savedC)],
+      ['Annualized', fmt$(savedC*12)],
+      ['FTE capacity freed', (savedH/FTE).toFixed(1)],
+    ].map(([l,v])=>`<div class="card tile" style="padding:12px 16px"><div class="label">${l}</div><div class="value" style="font-size:24px;color:var(--good-text)">${v}</div></div>`).join('');
+  }
+  render();
+});
+</script>
+</body>
+</html>

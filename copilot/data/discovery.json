@@ -1,0 +1,5796 @@
+{
+ "Q1": {
+  "title": "How big is the problem?",
+  "question": "Is denial volume material enough to justify a product?",
+  "sql": "SELECT\n    COUNT(*)                                            AS total_claims,\n    -- boolean expressions sum as 1/0 in SQLite, so SUM(status='denied')\n    -- is a conditional count of denied claims\n    SUM(status = 'denied')                              AS denied_claims,\n    -- multiply by 100.0 (not 100) to force float division, then round\n    ROUND(100.0 * SUM(status = 'denied') / COUNT(*), 1) AS denial_rate_pct,\n    -- CASE WHEN gives a conditional sum: charge dollars on denied claims only\n    ROUND(SUM(CASE WHEN status = 'denied' THEN charge_amount ELSE 0 END))\n                                                        AS denied_charges_usd,\n    -- rework_cost is zero on paid claims, so a plain SUM is safe here\n    ROUND(SUM(rework_cost))                             AS rework_cost_usd,\n    -- NULLIF guards the division: if there were zero denials the rate\n    -- returns NULL instead of crashing (NULL-safe division)\n    ROUND(100.0 * SUM(final_outcome = 'written_off')\n              / NULLIF(SUM(status = 'denied'), 0), 1)   AS pct_denials_written_off\nFROM claims;",
+  "rows": [
+   {
+    "total_claims": 6000,
+    "denied_claims": 923,
+    "denial_rate_pct": 15.4,
+    "denied_charges_usd": 829757.0,
+    "rework_cost_usd": 72869.0,
+    "pct_denials_written_off": 45.5
+   }
+  ]
+ },
+ "Q2": {
+  "title": "Where do denials concentrate?",
+  "question": "Is this a uniform problem or a payer-specific one?",
+  "sql": "SELECT\n    c.payer,\n    p.timely_filing_days,                    -- payer rule, for context\n    COUNT(*)                                 AS claims,\n    SUM(c.status = 'denied')                 AS denied,\n    ROUND(100.0 * SUM(c.status = 'denied') / COUNT(*), 1) AS denial_rate_pct,\n    ROUND(SUM(CASE WHEN c.status = 'denied' THEN c.charge_amount ELSE 0 END))\n                                             AS denied_charges_usd\nFROM claims c\nJOIN payers p ON p.payer = c.payer\nGROUP BY c.payer\nORDER BY denial_rate_pct DESC;               -- worst payer first",
+  "rows": [
+   {
+    "payer": "Medicaid",
+    "timely_filing_days": 95,
+    "claims": 903,
+    "denied": 292,
+    "denial_rate_pct": 32.3,
+    "denied_charges_usd": 252874.0
+   },
+   {
+    "payer": "UnityHealth",
+    "timely_filing_days": 90,
+    "claims": 1092,
+    "denied": 177,
+    "denial_rate_pct": 16.2,
+    "denied_charges_usd": 174105.0
+   },
+   {
+    "payer": "BlueShield Plus",
+    "timely_filing_days": 180,
+    "claims": 1493,
+    "denied": 196,
+    "denial_rate_pct": 13.1,
+    "denied_charges_usd": 168381.0
+   },
+   {
+    "payer": "SunCoast Health",
+    "timely_filing_days": 120,
+    "claims": 721,
+    "denied": 85,
+    "denial_rate_pct": 11.8,
+    "denied_charges_usd": 70943.0
+   },
+   {
+    "payer": "Medicare",
+    "timely_filing_days": 365,
+    "claims": 1791,
+    "denied": 173,
+    "denial_rate_pct": 9.7,
+    "denied_charges_usd": 163455.0
+   }
+  ]
+ },
+ "Q3": {
+  "title": "Why are claims denied?",
+  "question": "What share of denial reasons are knowable BEFORE submission?",
+  "sql": "SELECT\n    c.denial_code                            AS carc,\n    d.category,\n    d.description,\n    d.preventable_presubmission              AS preventable,\n    COUNT(*)                                 AS denials,\n    -- scalar subquery gives the denominator (all denials) so each row\n    -- reads as \"share of total denials\", not share of its own group\n    ROUND(100.0 * COUNT(*) / (SELECT COUNT(*) FROM claims WHERE status = 'denied'), 1)\n                                             AS pct_of_denials,\n    ROUND(SUM(c.charge_amount))              AS charges_usd,\n    ROUND(AVG(c.rework_cost), 2)             AS avg_rework_cost_usd\nFROM claims c\nJOIN denial_codes d ON d.carc = c.denial_code\nWHERE c.status = 'denied'                    -- reason mix only exists on denials\nGROUP BY c.denial_code\nORDER BY denials DESC;",
+  "rows": [
+   {
+    "carc": "CO-27",
+    "category": "Eligibility",
+    "description": "Expenses incurred after coverage terminated",
+    "preventable": 1,
+    "denials": 372,
+    "pct_of_denials": 40.3,
+    "charges_usd": 287044.0,
+    "avg_rework_cost_usd": 78.13
+   },
+   {
+    "carc": "CO-197",
+    "category": "Prior authorization",
+    "description": "Precertification/authorization absent",
+    "preventable": 1,
+    "denials": 177,
+    "pct_of_denials": 19.2,
+    "charges_usd": 233637.0,
+    "avg_rework_cost_usd": 84.5
+   },
+   {
+    "carc": "CO-11",
+    "category": "Coding / diagnosis",
+    "description": "Diagnosis inconsistent with procedure",
+    "preventable": 0,
+    "denials": 88,
+    "pct_of_denials": 9.5,
+    "charges_usd": 70369.0,
+    "avg_rework_cost_usd": 76.53
+   },
+   {
+    "carc": "CO-16",
+    "category": "Missing information",
+    "description": "Claim lacks information needed for adjudication",
+    "preventable": 1,
+    "denials": 83,
+    "pct_of_denials": 9.0,
+    "charges_usd": 62421.0,
+    "avg_rework_cost_usd": 77.36
+   },
+   {
+    "carc": "CO-50",
+    "category": "Medical necessity",
+    "description": "Non-covered: not deemed medically necessary",
+    "preventable": 0,
+    "denials": 66,
+    "pct_of_denials": 7.2,
+    "charges_usd": 52842.0,
+    "avg_rework_cost_usd": 75.22
+   },
+   {
+    "carc": "CO-4",
+    "category": "Coding / modifier",
+    "description": "Procedure code inconsistent with modifier",
+    "preventable": 1,
+    "denials": 64,
+    "pct_of_denials": 6.9,
+    "charges_usd": 75748.0,
+    "avg_rework_cost_usd": 79.81
+   },
+   {
+    "carc": "CO-29",
+    "category": "Timely filing",
+    "description": "Time limit for filing has expired",
+    "preventable": 1,
+    "denials": 43,
+    "pct_of_denials": 4.7,
+    "charges_usd": 26121.0,
+    "avg_rework_cost_usd": 76.67
+   },
+   {
+    "carc": "CO-18",
+    "category": "Duplicate",
+    "description": "Exact duplicate claim/service",
+    "preventable": 0,
+    "denials": 30,
+    "pct_of_denials": 3.3,
+    "charges_usd": 21576.0,
+    "avg_rework_cost_usd": 77.47
+   }
+  ]
+ },
+ "Q4": {
+  "title": "The headline aggregate: the preventable share",
+  "question": "The single number that justifies the build.",
+  "sql": "SELECT\n    -- preventable_presubmission is 1/0, so AVG-style math works via SUM/COUNT\n    ROUND(100.0 * SUM(d.preventable_presubmission) / COUNT(*), 1)\n                                             AS preventable_pct_of_denials,\n    ROUND(SUM(CASE WHEN d.preventable_presubmission = 1 THEN c.charge_amount END))\n                                             AS preventable_charges_usd,\n    ROUND(SUM(CASE WHEN d.preventable_presubmission = 1 THEN c.rework_cost END))\n                                             AS preventable_rework_usd\nFROM claims c\nJOIN denial_codes d ON d.carc = c.denial_code\nWHERE c.status = 'denied';",
+  "rows": [
+   {
+    "preventable_pct_of_denials": 80.1,
+    "preventable_charges_usd": 684971.0,
+    "preventable_rework_usd": 58846.0
+   }
+  ]
+ },
+ "Q5": {
+  "title": "Monthly trend",
+  "question": "Is this getting better on its own? (If yes, no product needed.)",
+  "sql": "SELECT\n    strftime('%Y-%m', service_date)          AS month,\n    COUNT(*)                                 AS claims,\n    ROUND(100.0 * SUM(status = 'denied') / COUNT(*), 1) AS denial_rate_pct,\n    ROUND(SUM(CASE WHEN status = 'denied' THEN charge_amount ELSE 0 END))\n                                             AS denied_charges_usd\nFROM claims\nGROUP BY month\nORDER BY month;",
+  "rows": [
+   {
+    "month": "2026-01",
+    "claims": 1049,
+    "denial_rate_pct": 12.6,
+    "denied_charges_usd": 116102.0
+   },
+   {
+    "month": "2026-02",
+    "claims": 944,
+    "denial_rate_pct": 16.1,
+    "denied_charges_usd": 137239.0
+   },
+   {
+    "month": "2026-03",
+    "claims": 1005,
+    "denial_rate_pct": 15.6,
+    "denied_charges_usd": 141575.0
+   },
+   {
+    "month": "2026-04",
+    "claims": 994,
+    "denial_rate_pct": 15.8,
+    "denied_charges_usd": 132428.0
+   },
+   {
+    "month": "2026-05",
+    "claims": 1036,
+    "denial_rate_pct": 16.7,
+    "denied_charges_usd": 169184.0
+   },
+   {
+    "month": "2026-06",
+    "claims": 972,
+    "denial_rate_pct": 15.6,
+    "denied_charges_usd": 133231.0
+   }
+  ]
+ },
+ "Q6": {
+  "title": "Cash-flow impact",
+  "question": "Denials do not just cost rework labour; they stall cash.",
+  "sql": "SELECT\n    final_outcome,\n    COUNT(*)                                 AS claims,\n    ROUND(AVG(days_to_payment), 1)           AS avg_days_to_payment\nFROM claims\nWHERE days_to_payment IS NOT NULL            -- written-off claims never pay;\n                                             -- excluding them avoids a NULL avg\nGROUP BY final_outcome\nORDER BY avg_days_to_payment;",
+  "rows": [
+   {
+    "final_outcome": "paid_first_pass",
+    "claims": 5077,
+    "avg_days_to_payment": 29.3
+   },
+   {
+    "final_outcome": "recovered_after_rework",
+    "claims": 503,
+    "avg_days_to_payment": 96.3
+   }
+  ]
+ },
+ "Q7": {
+  "title": "Top denial reason per payer (window function)",
+  "question": "Payer-specific patterns are the moat argument.",
+  "sql": "WITH payer_reason AS (\n    -- first aggregate denials to (payer, category) grain...\n    SELECT\n        c.payer,\n        d.category,\n        COUNT(*) AS denials,\n        -- ...then rank categories within each payer partition;\n        -- RANK() restarts at 1 for every payer\n        RANK() OVER (PARTITION BY c.payer ORDER BY COUNT(*) DESC) AS rnk\n    FROM claims c\n    JOIN denial_codes d ON d.carc = c.denial_code\n    WHERE c.status = 'denied'\n    GROUP BY c.payer, d.category\n)\nSELECT payer, category AS top_denial_category, denials\nFROM payer_reason\nWHERE rnk = 1                                -- keep only each payer's #1 reason\nORDER BY denials DESC;",
+  "rows": [
+   {
+    "payer": "Medicaid",
+    "top_denial_category": "Eligibility",
+    "denials": 177
+   },
+   {
+    "payer": "BlueShield Plus",
+    "top_denial_category": "Eligibility",
+    "denials": 82
+   },
+   {
+    "payer": "Medicare",
+    "top_denial_category": "Eligibility",
+    "denials": 53
+   },
+   {
+    "payer": "UnityHealth",
+    "top_denial_category": "Prior authorization",
+    "denials": 52
+   },
+   {
+    "payer": "SunCoast Health",
+    "top_denial_category": "Eligibility",
+    "denials": 23
+   }
+  ]
+ },
+ "Q8": {
+  "title": "Fact-pattern audit",
+  "question": "Is the risk signal visible at submission time? (Feasibility check.)",
+  "sql": "SELECT 'Prior auth required but missing' AS gap,\n       COUNT(*) AS claims,\n       ROUND(100.0 * SUM(status='denied') / COUNT(*), 1) AS denial_rate_pct\nFROM claims WHERE prior_auth_required = 1 AND prior_auth_obtained = 0\nUNION ALL\nSELECT 'Eligibility unverified or stale >60d',\n       COUNT(*),\n       ROUND(100.0 * SUM(status='denied') / COUNT(*), 1)\nFROM claims WHERE eligibility_verified = 0 OR elig_stale_days > 60\nUNION ALL\nSELECT 'Required modifier missing',\n       COUNT(*),\n       ROUND(100.0 * SUM(status='denied') / COUNT(*), 1)\nFROM claims WHERE modifier_required = 1 AND modifier_present = 0\nUNION ALL\nSELECT 'Submitted past timely-filing limit',\n       COUNT(*),\n       ROUND(100.0 * SUM(c.status='denied') / COUNT(*), 1)\nFROM claims c JOIN payers p ON p.payer = c.payer\nWHERE c.days_to_submit > p.timely_filing_days\nUNION ALL\nSELECT 'No gap present (clean fact pattern)',\n       COUNT(*),\n       ROUND(100.0 * SUM(status='denied') / COUNT(*), 1)\nFROM claims\nWHERE NOT (prior_auth_required = 1 AND prior_auth_obtained = 0)\n  AND eligibility_verified = 1 AND elig_stale_days <= 60\n  AND NOT (modifier_required = 1 AND modifier_present = 0)\n  AND has_missing_fields = 0;",
+  "rows": [
+   {
+    "gap": "Prior auth required but missing",
+    "claims": 291,
+    "denial_rate_pct": 68.0
+   },
+   {
+    "gap": "Eligibility unverified or stale >60d",
+    "claims": 936,
+    "denial_rate_pct": 46.5
+   },
+   {
+    "gap": "Required modifier missing",
+    "claims": 159,
+    "denial_rate_pct": 49.1
+   },
+   {
+    "gap": "Submitted past timely-filing limit",
+    "claims": 56,
+    "denial_rate_pct": 92.9
+   },
+   {
+    "gap": "No gap present (clean fact pattern)",
+    "claims": 4456,
+    "denial_rate_pct": 4.8
+   }
+  ]
+ },
+ "cube": [
+  {
+   "p": "BlueShield Plus",
+   "s": "Dermatology",
+   "m": "2026-01",
+   "n": 63,
+   "d": 6,
+   "dc": 996.48,
+   "rw": 521.0,
+   "wo": 3,
+   "cat": {
+    "Prior authorization": 2,
+    "Eligibility": 2,
+    "Coding / diagnosis": 1,
+    "Coding / modifier": 1
+   },
+   "gaps": {
+    "pa": [
+     2,
+     2
+    ],
+    "el": [
+     6,
+     3
+    ],
+    "mod": [
+     3,
+     1
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     52,
+     1
+    ]
+   },
+   "pay": [
+    57,
+    1767.0
+   ],
+   "rec": [
+    3,
+    317.0
+   ]
+  },
+  {
+   "p": "BlueShield Plus",
+   "s": "Dermatology",
+   "m": "2026-02",
+   "n": 67,
+   "d": 9,
+   "dc": 1229.55,
+   "rw": 592.7800000000001,
+   "wo": 4,
+   "cat": {
+    "Medical necessity": 2,
+    "Missing information": 1,
+    "Eligibility": 6
+   },
+   "gaps": {
+    "pa": [
+     1,
+     0
+    ],
+    "el": [
+     11,
+     7
+    ],
+    "mod": [
+     2,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     51,
+     2
+    ]
+   },
+   "pay": [
+    58,
+    1689.0
+   ],
+   "rec": [
+    5,
+    532.0
+   ]
+  },
+  {
+   "p": "BlueShield Plus",
+   "s": "Dermatology",
+   "m": "2026-03",
+   "n": 61,
+   "d": 12,
+   "dc": 1738.6100000000001,
+   "rw": 766.5500000000001,
+   "wo": 5,
+   "cat": {
+    "Coding / diagnosis": 1,
+    "Eligibility": 6,
+    "Duplicate": 1,
+    "Missing information": 2,
+    "Medical necessity": 2
+   },
+   "gaps": {
+    "pa": [
+     0,
+     0
+    ],
+    "el": [
+     13,
+     7
+    ],
+    "mod": [
+     3,
+     1
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     43,
+     4
+    ]
+   },
+   "pay": [
+    49,
+    1505.0
+   ],
+   "rec": [
+    7,
+    719.0
+   ]
+  },
+  {
+   "p": "BlueShield Plus",
+   "s": "Dermatology",
+   "m": "2026-04",
+   "n": 59,
+   "d": 8,
+   "dc": 956.22,
+   "rw": 514.66,
+   "wo": 5,
+   "cat": {
+    "Eligibility": 4,
+    "Prior authorization": 2,
+    "Medical necessity": 1,
+    "Missing information": 1
+   },
+   "gaps": {
+    "pa": [
+     2,
+     2
+    ],
+    "el": [
+     9,
+     4
+    ],
+    "mod": [
+     3,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     43,
+     1
+    ]
+   },
+   "pay": [
+    51,
+    1509.0
+   ],
+   "rec": [
+    3,
+    300.0
+   ]
+  },
+  {
+   "p": "BlueShield Plus",
+   "s": "Dermatology",
+   "m": "2026-05",
+   "n": 65,
+   "d": 6,
+   "dc": 1131.44,
+   "rw": 339.84000000000003,
+   "wo": 3,
+   "cat": {
+    "Eligibility": 4,
+    "Coding / diagnosis": 1,
+    "Duplicate": 1
+   },
+   "gaps": {
+    "pa": [
+     1,
+     0
+    ],
+    "el": [
+     9,
+     4
+    ],
+    "mod": [
+     3,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     51,
+     2
+    ]
+   },
+   "pay": [
+    59,
+    1798.0
+   ],
+   "rec": [
+    3,
+    298.0
+   ]
+  },
+  {
+   "p": "BlueShield Plus",
+   "s": "Dermatology",
+   "m": "2026-06",
+   "n": 69,
+   "d": 6,
+   "dc": 890.73,
+   "rw": 298.26,
+   "wo": 2,
+   "cat": {
+    "Coding / diagnosis": 1,
+    "Prior authorization": 2,
+    "Eligibility": 3
+   },
+   "gaps": {
+    "pa": [
+     2,
+     2
+    ],
+    "el": [
+     19,
+     4
+    ],
+    "mod": [
+     1,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     44,
+     1
+    ]
+   },
+   "pay": [
+    63,
+    1882.0
+   ],
+   "rec": [
+    4,
+    338.0
+   ]
+  },
+  {
+   "p": "BlueShield Plus",
+   "s": "Gastroenterology",
+   "m": "2026-01",
+   "n": 56,
+   "d": 3,
+   "dc": 3372.33,
+   "rw": 288.15000000000003,
+   "wo": 1,
+   "cat": {
+    "Prior authorization": 2,
+    "Eligibility": 1
+   },
+   "gaps": {
+    "pa": [
+     6,
+     2
+    ],
+    "el": [
+     8,
+     1
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     41,
+     0
+    ]
+   },
+   "pay": [
+    53,
+    1526.0
+   ],
+   "rec": [
+    2,
+    165.0
+   ]
+  },
+  {
+   "p": "BlueShield Plus",
+   "s": "Gastroenterology",
+   "m": "2026-02",
+   "n": 56,
+   "d": 10,
+   "dc": 11085.45,
+   "rw": 720.6600000000001,
+   "wo": 4,
+   "cat": {
+    "Medical necessity": 1,
+    "Coding / diagnosis": 4,
+    "Prior authorization": 3,
+    "Eligibility": 1,
+    "Missing information": 1
+   },
+   "gaps": {
+    "pa": [
+     5,
+     3
+    ],
+    "el": [
+     5,
+     1
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     45,
+     5
+    ]
+   },
+   "pay": [
+    46,
+    1412.0
+   ],
+   "rec": [
+    6,
+    498.0
+   ]
+  },
+  {
+   "p": "BlueShield Plus",
+   "s": "Gastroenterology",
+   "m": "2026-03",
+   "n": 70,
+   "d": 15,
+   "dc": 17150.129999999997,
+   "rw": 1244.57,
+   "wo": 8,
+   "cat": {
+    "Missing information": 1,
+    "Medical necessity": 1,
+    "Eligibility": 6,
+    "Coding / diagnosis": 2,
+    "Prior authorization": 5
+   },
+   "gaps": {
+    "pa": [
+     6,
+     6
+    ],
+    "el": [
+     18,
+     7
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     47,
+     3
+    ]
+   },
+   "pay": [
+    55,
+    1434.0
+   ],
+   "rec": [
+    7,
+    616.0
+   ]
+  },
+  {
+   "p": "BlueShield Plus",
+   "s": "Gastroenterology",
+   "m": "2026-04",
+   "n": 54,
+   "d": 5,
+   "dc": 6369.700000000001,
+   "rw": 434.37,
+   "wo": 1,
+   "cat": {
+    "Missing information": 1,
+    "Medical necessity": 1,
+    "Eligibility": 3
+   },
+   "gaps": {
+    "pa": [
+     5,
+     1
+    ],
+    "el": [
+     6,
+     3
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     41,
+     1
+    ]
+   },
+   "pay": [
+    49,
+    1433.0
+   ],
+   "rec": [
+    4,
+    365.0
+   ]
+  },
+  {
+   "p": "BlueShield Plus",
+   "s": "Gastroenterology",
+   "m": "2026-05",
+   "n": 59,
+   "d": 12,
+   "dc": 13685.350000000002,
+   "rw": 1049.33,
+   "wo": 4,
+   "cat": {
+    "Missing information": 2,
+    "Coding / diagnosis": 2,
+    "Eligibility": 5,
+    "Medical necessity": 1,
+    "Prior authorization": 2
+   },
+   "gaps": {
+    "pa": [
+     5,
+     3
+    ],
+    "el": [
+     10,
+     6
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     43,
+     3
+    ]
+   },
+   "pay": [
+    47,
+    1361.0
+   ],
+   "rec": [
+    8,
+    781.0
+   ]
+  },
+  {
+   "p": "BlueShield Plus",
+   "s": "Gastroenterology",
+   "m": "2026-06",
+   "n": 62,
+   "d": 6,
+   "dc": 6654.7,
+   "rw": 495.34999999999997,
+   "wo": 4,
+   "cat": {
+    "Prior authorization": 2,
+    "Eligibility": 3,
+    "Missing information": 1
+   },
+   "gaps": {
+    "pa": [
+     3,
+     2
+    ],
+    "el": [
+     10,
+     3
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     44,
+     0
+    ]
+   },
+   "pay": [
+    56,
+    1618.0
+   ],
+   "rec": [
+    2,
+    221.0
+   ]
+  },
+  {
+   "p": "BlueShield Plus",
+   "s": "Ophthalmology",
+   "m": "2026-01",
+   "n": 61,
+   "d": 8,
+   "dc": 9436.169999999998,
+   "rw": 669.0999999999999,
+   "wo": 4,
+   "cat": {
+    "Eligibility": 2,
+    "Coding / diagnosis": 3,
+    "Missing information": 2,
+    "Medical necessity": 1
+   },
+   "gaps": {
+    "pa": [
+     0,
+     0
+    ],
+    "el": [
+     10,
+     3
+    ],
+    "mod": [
+     1,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     48,
+     4
+    ]
+   },
+   "pay": [
+    53,
+    1444.0
+   ],
+   "rec": [
+    4,
+    390.0
+   ]
+  },
+  {
+   "p": "BlueShield Plus",
+   "s": "Ophthalmology",
+   "m": "2026-02",
+   "n": 60,
+   "d": 7,
+   "dc": 10273.2,
+   "rw": 587.53,
+   "wo": 2,
+   "cat": {
+    "Eligibility": 3,
+    "Missing information": 1,
+    "Prior authorization": 2,
+    "Coding / diagnosis": 1
+   },
+   "gaps": {
+    "pa": [
+     2,
+     2
+    ],
+    "el": [
+     10,
+     3
+    ],
+    "mod": [
+     1,
+     1
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     43,
+     1
+    ]
+   },
+   "pay": [
+    53,
+    1551.0
+   ],
+   "rec": [
+    5,
+    521.0
+   ]
+  },
+  {
+   "p": "BlueShield Plus",
+   "s": "Ophthalmology",
+   "m": "2026-03",
+   "n": 68,
+   "d": 12,
+   "dc": 12683.21,
+   "rw": 869.77,
+   "wo": 6,
+   "cat": {
+    "Eligibility": 6,
+    "Prior authorization": 3,
+    "Medical necessity": 2,
+    "Missing information": 1
+   },
+   "gaps": {
+    "pa": [
+     3,
+     3
+    ],
+    "el": [
+     16,
+     6
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     46,
+     2
+    ]
+   },
+   "pay": [
+    56,
+    1759.0
+   ],
+   "rec": [
+    6,
+    629.0
+   ]
+  },
+  {
+   "p": "BlueShield Plus",
+   "s": "Ophthalmology",
+   "m": "2026-04",
+   "n": 60,
+   "d": 7,
+   "dc": 3556.2699999999995,
+   "rw": 587.52,
+   "wo": 3,
+   "cat": {
+    "Eligibility": 4,
+    "Coding / modifier": 1,
+    "Coding / diagnosis": 1,
+    "Prior authorization": 1
+   },
+   "gaps": {
+    "pa": [
+     2,
+     1
+    ],
+    "el": [
+     8,
+     4
+    ],
+    "mod": [
+     2,
+     1
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     46,
+     1
+    ]
+   },
+   "pay": [
+    53,
+    1588.0
+   ],
+   "rec": [
+    4,
+    359.0
+   ]
+  },
+  {
+   "p": "BlueShield Plus",
+   "s": "Ophthalmology",
+   "m": "2026-05",
+   "n": 66,
+   "d": 6,
+   "dc": 3676.1400000000003,
+   "rw": 402.76,
+   "wo": 2,
+   "cat": {
+    "Medical necessity": 3,
+    "Eligibility": 3
+   },
+   "gaps": {
+    "pa": [
+     0,
+     0
+    ],
+    "el": [
+     9,
+     3
+    ],
+    "mod": [
+     1,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     53,
+     3
+    ]
+   },
+   "pay": [
+    60,
+    1801.0
+   ],
+   "rec": [
+    4,
+    323.0
+   ]
+  },
+  {
+   "p": "BlueShield Plus",
+   "s": "Ophthalmology",
+   "m": "2026-06",
+   "n": 65,
+   "d": 11,
+   "dc": 7978.02,
+   "rw": 773.02,
+   "wo": 3,
+   "cat": {
+    "Missing information": 2,
+    "Coding / diagnosis": 4,
+    "Coding / modifier": 1,
+    "Prior authorization": 2,
+    "Eligibility": 2
+   },
+   "gaps": {
+    "pa": [
+     4,
+     3
+    ],
+    "el": [
+     8,
+     2
+    ],
+    "mod": [
+     1,
+     1
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     50,
+     4
+    ]
+   },
+   "pay": [
+    54,
+    1549.0
+   ],
+   "rec": [
+    8,
+    744.0
+   ]
+  },
+  {
+   "p": "BlueShield Plus",
+   "s": "Orthopedics",
+   "m": "2026-01",
+   "n": 74,
+   "d": 3,
+   "dc": 3090.1,
+   "rw": 292.51,
+   "wo": 1,
+   "cat": {
+    "Eligibility": 1,
+    "Missing information": 1,
+    "Coding / modifier": 1
+   },
+   "gaps": {
+    "pa": [
+     1,
+     0
+    ],
+    "el": [
+     8,
+     1
+    ],
+    "mod": [
+     7,
+     1
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     55,
+     0
+    ]
+   },
+   "pay": [
+    71,
+    2250.0
+   ],
+   "rec": [
+    2,
+    199.0
+   ]
+  },
+  {
+   "p": "BlueShield Plus",
+   "s": "Orthopedics",
+   "m": "2026-02",
+   "n": 52,
+   "d": 8,
+   "dc": 10089.1,
+   "rw": 686.95,
+   "wo": 3,
+   "cat": {
+    "Prior authorization": 3,
+    "Medical necessity": 2,
+    "Eligibility": 1,
+    "Coding / modifier": 1,
+    "Duplicate": 1
+   },
+   "gaps": {
+    "pa": [
+     6,
+     4
+    ],
+    "el": [
+     4,
+     1
+    ],
+    "mod": [
+     2,
+     1
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     39,
+     3
+    ]
+   },
+   "pay": [
+    44,
+    1361.0
+   ],
+   "rec": [
+    5,
+    498.0
+   ]
+  },
+  {
+   "p": "BlueShield Plus",
+   "s": "Orthopedics",
+   "m": "2026-03",
+   "n": 53,
+   "d": 5,
+   "dc": 2189.0499999999997,
+   "rw": 284.26,
+   "wo": 2,
+   "cat": {
+    "Coding / modifier": 2,
+    "Eligibility": 2,
+    "Missing information": 1
+   },
+   "gaps": {
+    "pa": [
+     0,
+     0
+    ],
+    "el": [
+     5,
+     3
+    ],
+    "mod": [
+     2,
+     2
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     43,
+     0
+    ]
+   },
+   "pay": [
+    48,
+    1395.0
+   ],
+   "rec": [
+    3,
+    325.0
+   ]
+  },
+  {
+   "p": "BlueShield Plus",
+   "s": "Orthopedics",
+   "m": "2026-04",
+   "n": 67,
+   "d": 14,
+   "dc": 14000.330000000002,
+   "rw": 1062.71,
+   "wo": 7,
+   "cat": {
+    "Medical necessity": 2,
+    "Eligibility": 6,
+    "Missing information": 2,
+    "Prior authorization": 2,
+    "Coding / modifier": 1,
+    "Coding / diagnosis": 1
+   },
+   "gaps": {
+    "pa": [
+     3,
+     2
+    ],
+    "el": [
+     13,
+     6
+    ],
+    "mod": [
+     3,
+     2
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     46,
+     3
+    ]
+   },
+   "pay": [
+    53,
+    1410.0
+   ],
+   "rec": [
+    7,
+    677.0
+   ]
+  },
+  {
+   "p": "BlueShield Plus",
+   "s": "Orthopedics",
+   "m": "2026-05",
+   "n": 62,
+   "d": 6,
+   "dc": 9665.46,
+   "rw": 504.07,
+   "wo": 4,
+   "cat": {
+    "Prior authorization": 3,
+    "Eligibility": 3
+   },
+   "gaps": {
+    "pa": [
+     3,
+     3
+    ],
+    "el": [
+     11,
+     3
+    ],
+    "mod": [
+     2,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     44,
+     0
+    ]
+   },
+   "pay": [
+    56,
+    1574.0
+   ],
+   "rec": [
+    2,
+    215.0
+   ]
+  },
+  {
+   "p": "BlueShield Plus",
+   "s": "Orthopedics",
+   "m": "2026-06",
+   "n": 64,
+   "d": 11,
+   "dc": 16483.5,
+   "rw": 991.59,
+   "wo": 4,
+   "cat": {
+    "Duplicate": 1,
+    "Prior authorization": 2,
+    "Eligibility": 5,
+    "Missing information": 1,
+    "Coding / diagnosis": 2
+   },
+   "gaps": {
+    "pa": [
+     3,
+     2
+    ],
+    "el": [
+     9,
+     6
+    ],
+    "mod": [
+     3,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     48,
+     3
+    ]
+   },
+   "pay": [
+    53,
+    1380.0
+   ],
+   "rec": [
+    7,
+    581.0
+   ]
+  },
+  {
+   "p": "Medicaid",
+   "s": "Dermatology",
+   "m": "2026-01",
+   "n": 41,
+   "d": 11,
+   "dc": 1360.7999999999997,
+   "rw": 828.98,
+   "wo": 4,
+   "cat": {
+    "Eligibility": 10,
+    "Prior authorization": 1
+   },
+   "gaps": {
+    "pa": [
+     1,
+     1
+    ],
+    "el": [
+     20,
+     11
+    ],
+    "mod": [
+     2,
+     0
+    ],
+    "tf": [
+     1,
+     1
+    ],
+    "clean": [
+     18,
+     0
+    ]
+   },
+   "pay": [
+    30,
+    863.0
+   ],
+   "rec": [
+    7,
+    654.0
+   ]
+  },
+  {
+   "p": "Medicaid",
+   "s": "Dermatology",
+   "m": "2026-02",
+   "n": 34,
+   "d": 9,
+   "dc": 1942.15,
+   "rw": 662.9300000000001,
+   "wo": 5,
+   "cat": {
+    "Eligibility": 6,
+    "Missing information": 2,
+    "Duplicate": 1
+   },
+   "gaps": {
+    "pa": [
+     0,
+     0
+    ],
+    "el": [
+     13,
+     6
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     19,
+     1
+    ]
+   },
+   "pay": [
+    25,
+    714.0
+   ],
+   "rec": [
+    4,
+    305.0
+   ]
+  },
+  {
+   "p": "Medicaid",
+   "s": "Dermatology",
+   "m": "2026-03",
+   "n": 38,
+   "d": 9,
+   "dc": 1484.96,
+   "rw": 597.2,
+   "wo": 4,
+   "cat": {
+    "Eligibility": 9
+   },
+   "gaps": {
+    "pa": [
+     0,
+     0
+    ],
+    "el": [
+     17,
+     9
+    ],
+    "mod": [
+     1,
+     0
+    ],
+    "tf": [
+     1,
+     1
+    ],
+    "clean": [
+     20,
+     0
+    ]
+   },
+   "pay": [
+    29,
+    778.0
+   ],
+   "rec": [
+    5,
+    528.0
+   ]
+  },
+  {
+   "p": "Medicaid",
+   "s": "Dermatology",
+   "m": "2026-04",
+   "n": 37,
+   "d": 16,
+   "dc": 2686.8300000000004,
+   "rw": 1275.3899999999999,
+   "wo": 8,
+   "cat": {
+    "Missing information": 2,
+    "Eligibility": 9,
+    "Timely filing": 1,
+    "Coding / diagnosis": 2,
+    "Medical necessity": 1,
+    "Coding / modifier": 1
+   },
+   "gaps": {
+    "pa": [
+     0,
+     0
+    ],
+    "el": [
+     18,
+     11
+    ],
+    "mod": [
+     1,
+     1
+    ],
+    "tf": [
+     3,
+     3
+    ],
+    "clean": [
+     15,
+     3
+    ]
+   },
+   "pay": [
+    21,
+    571.0
+   ],
+   "rec": [
+    8,
+    743.0
+   ]
+  },
+  {
+   "p": "Medicaid",
+   "s": "Dermatology",
+   "m": "2026-05",
+   "n": 40,
+   "d": 6,
+   "dc": 890.1200000000001,
+   "rw": 463.92999999999995,
+   "wo": 2,
+   "cat": {
+    "Eligibility": 3,
+    "Coding / diagnosis": 1,
+    "Coding / modifier": 1,
+    "Medical necessity": 1
+   },
+   "gaps": {
+    "pa": [
+     0,
+     0
+    ],
+    "el": [
+     10,
+     3
+    ],
+    "mod": [
+     2,
+     1
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     27,
+     2
+    ]
+   },
+   "pay": [
+    34,
+    896.0
+   ],
+   "rec": [
+    4,
+    492.0
+   ]
+  },
+  {
+   "p": "Medicaid",
+   "s": "Dermatology",
+   "m": "2026-06",
+   "n": 33,
+   "d": 11,
+   "dc": 1533.48,
+   "rw": 766.1399999999999,
+   "wo": 5,
+   "cat": {
+    "Coding / diagnosis": 1,
+    "Timely filing": 1,
+    "Medical necessity": 1,
+    "Eligibility": 6,
+    "Missing information": 2
+   },
+   "gaps": {
+    "pa": [
+     0,
+     0
+    ],
+    "el": [
+     9,
+     6
+    ],
+    "mod": [
+     1,
+     1
+    ],
+    "tf": [
+     1,
+     1
+    ],
+    "clean": [
+     21,
+     3
+    ]
+   },
+   "pay": [
+    22,
+    596.0
+   ],
+   "rec": [
+    6,
+    550.0
+   ]
+  },
+  {
+   "p": "Medicaid",
+   "s": "Gastroenterology",
+   "m": "2026-01",
+   "n": 35,
+   "d": 13,
+   "dc": 14113.72,
+   "rw": 1146.43,
+   "wo": 3,
+   "cat": {
+    "Eligibility": 7,
+    "Coding / diagnosis": 1,
+    "Prior authorization": 4,
+    "Medical necessity": 1
+   },
+   "gaps": {
+    "pa": [
+     5,
+     4
+    ],
+    "el": [
+     16,
+     10
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     17,
+     2
+    ]
+   },
+   "pay": [
+    22,
+    572.0
+   ],
+   "rec": [
+    10,
+    933.0
+   ]
+  },
+  {
+   "p": "Medicaid",
+   "s": "Gastroenterology",
+   "m": "2026-02",
+   "n": 41,
+   "d": 13,
+   "dc": 14100.310000000001,
+   "rw": 871.36,
+   "wo": 7,
+   "cat": {
+    "Eligibility": 6,
+    "Missing information": 1,
+    "Prior authorization": 6
+   },
+   "gaps": {
+    "pa": [
+     8,
+     7
+    ],
+    "el": [
+     11,
+     8
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     22,
+     0
+    ]
+   },
+   "pay": [
+    28,
+    857.0
+   ],
+   "rec": [
+    6,
+    625.0
+   ]
+  },
+  {
+   "p": "Medicaid",
+   "s": "Gastroenterology",
+   "m": "2026-03",
+   "n": 29,
+   "d": 9,
+   "dc": 10382.98,
+   "rw": 790.05,
+   "wo": 2,
+   "cat": {
+    "Prior authorization": 2,
+    "Eligibility": 6,
+    "Coding / diagnosis": 1
+   },
+   "gaps": {
+    "pa": [
+     6,
+     3
+    ],
+    "el": [
+     9,
+     7
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     16,
+     1
+    ]
+   },
+   "pay": [
+    20,
+    520.0
+   ],
+   "rec": [
+    7,
+    709.0
+   ]
+  },
+  {
+   "p": "Medicaid",
+   "s": "Gastroenterology",
+   "m": "2026-04",
+   "n": 33,
+   "d": 11,
+   "dc": 12000.65,
+   "rw": 888.2700000000001,
+   "wo": 4,
+   "cat": {
+    "Prior authorization": 3,
+    "Eligibility": 7,
+    "Coding / diagnosis": 1
+   },
+   "gaps": {
+    "pa": [
+     5,
+     5
+    ],
+    "el": [
+     13,
+     8
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     1,
+     1
+    ],
+    "clean": [
+     18,
+     1
+    ]
+   },
+   "pay": [
+    22,
+    666.0
+   ],
+   "rec": [
+    7,
+    651.0
+   ]
+  },
+  {
+   "p": "Medicaid",
+   "s": "Gastroenterology",
+   "m": "2026-05",
+   "n": 38,
+   "d": 15,
+   "dc": 17097.56,
+   "rw": 1246.09,
+   "wo": 7,
+   "cat": {
+    "Eligibility": 9,
+    "Prior authorization": 3,
+    "Missing information": 1,
+    "Coding / diagnosis": 1,
+    "Duplicate": 1
+   },
+   "gaps": {
+    "pa": [
+     3,
+     3
+    ],
+    "el": [
+     12,
+     11
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     24,
+     2
+    ]
+   },
+   "pay": [
+    23,
+    638.0
+   ],
+   "rec": [
+    8,
+    793.0
+   ]
+  },
+  {
+   "p": "Medicaid",
+   "s": "Gastroenterology",
+   "m": "2026-06",
+   "n": 37,
+   "d": 10,
+   "dc": 11245.83,
+   "rw": 810.46,
+   "wo": 3,
+   "cat": {
+    "Eligibility": 7,
+    "Prior authorization": 2,
+    "Timely filing": 1
+   },
+   "gaps": {
+    "pa": [
+     4,
+     3
+    ],
+    "el": [
+     15,
+     9
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     1,
+     1
+    ],
+    "clean": [
+     19,
+     0
+    ]
+   },
+   "pay": [
+    27,
+    873.0
+   ],
+   "rec": [
+    7,
+    675.0
+   ]
+  },
+  {
+   "p": "Medicaid",
+   "s": "Ophthalmology",
+   "m": "2026-01",
+   "n": 39,
+   "d": 13,
+   "dc": 15081.59,
+   "rw": 1124.3,
+   "wo": 8,
+   "cat": {
+    "Duplicate": 1,
+    "Prior authorization": 2,
+    "Eligibility": 7,
+    "Coding / modifier": 2,
+    "Missing information": 1
+   },
+   "gaps": {
+    "pa": [
+     4,
+     3
+    ],
+    "el": [
+     16,
+     9
+    ],
+    "mod": [
+     3,
+     2
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     18,
+     1
+    ]
+   },
+   "pay": [
+    26,
+    837.0
+   ],
+   "rec": [
+    5,
+    463.0
+   ]
+  },
+  {
+   "p": "Medicaid",
+   "s": "Ophthalmology",
+   "m": "2026-02",
+   "n": 40,
+   "d": 15,
+   "dc": 12829.27,
+   "rw": 1238.56,
+   "wo": 5,
+   "cat": {
+    "Eligibility": 9,
+    "Coding / diagnosis": 1,
+    "Prior authorization": 2,
+    "Missing information": 2,
+    "Medical necessity": 1
+   },
+   "gaps": {
+    "pa": [
+     2,
+     2
+    ],
+    "el": [
+     18,
+     10
+    ],
+    "mod": [
+     2,
+     2
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     19,
+     2
+    ]
+   },
+   "pay": [
+    25,
+    814.0
+   ],
+   "rec": [
+    10,
+    1052.0
+   ]
+  },
+  {
+   "p": "Medicaid",
+   "s": "Ophthalmology",
+   "m": "2026-03",
+   "n": 42,
+   "d": 15,
+   "dc": 12956.410000000002,
+   "rw": 1369.6899999999998,
+   "wo": 6,
+   "cat": {
+    "Eligibility": 10,
+    "Prior authorization": 1,
+    "Duplicate": 1,
+    "Coding / modifier": 1,
+    "Coding / diagnosis": 2
+   },
+   "gaps": {
+    "pa": [
+     2,
+     1
+    ],
+    "el": [
+     18,
+     12
+    ],
+    "mod": [
+     1,
+     1
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     23,
+     3
+    ]
+   },
+   "pay": [
+    27,
+    875.0
+   ],
+   "rec": [
+    9,
+    923.0
+   ]
+  },
+  {
+   "p": "Medicaid",
+   "s": "Ophthalmology",
+   "m": "2026-04",
+   "n": 35,
+   "d": 10,
+   "dc": 10548.349999999999,
+   "rw": 901.6600000000001,
+   "wo": 5,
+   "cat": {
+    "Prior authorization": 2,
+    "Eligibility": 5,
+    "Medical necessity": 1,
+    "Timely filing": 2
+   },
+   "gaps": {
+    "pa": [
+     2,
+     2
+    ],
+    "el": [
+     13,
+     6
+    ],
+    "mod": [
+     1,
+     0
+    ],
+    "tf": [
+     3,
+     3
+    ],
+    "clean": [
+     20,
+     2
+    ]
+   },
+   "pay": [
+    25,
+    680.0
+   ],
+   "rec": [
+    5,
+    578.0
+   ]
+  },
+  {
+   "p": "Medicaid",
+   "s": "Ophthalmology",
+   "m": "2026-05",
+   "n": 34,
+   "d": 11,
+   "dc": 9701.09,
+   "rw": 931.5600000000001,
+   "wo": 6,
+   "cat": {
+    "Eligibility": 6,
+    "Prior authorization": 2,
+    "Timely filing": 2,
+    "Missing information": 1
+   },
+   "gaps": {
+    "pa": [
+     2,
+     2
+    ],
+    "el": [
+     14,
+     8
+    ],
+    "mod": [
+     2,
+     1
+    ],
+    "tf": [
+     2,
+     2
+    ],
+    "clean": [
+     17,
+     1
+    ]
+   },
+   "pay": [
+    23,
+    623.0
+   ],
+   "rec": [
+    5,
+    463.0
+   ]
+  },
+  {
+   "p": "Medicaid",
+   "s": "Ophthalmology",
+   "m": "2026-06",
+   "n": 43,
+   "d": 18,
+   "dc": 17638.620000000003,
+   "rw": 1381.72,
+   "wo": 6,
+   "cat": {
+    "Timely filing": 1,
+    "Eligibility": 10,
+    "Coding / modifier": 1,
+    "Prior authorization": 3,
+    "Medical necessity": 1,
+    "Duplicate": 1,
+    "Missing information": 1
+   },
+   "gaps": {
+    "pa": [
+     4,
+     3
+    ],
+    "el": [
+     20,
+     14
+    ],
+    "mod": [
+     3,
+     1
+    ],
+    "tf": [
+     1,
+     1
+    ],
+    "clean": [
+     18,
+     2
+    ]
+   },
+   "pay": [
+    25,
+    684.0
+   ],
+   "rec": [
+    12,
+    1161.0
+   ]
+  },
+  {
+   "p": "Medicaid",
+   "s": "Orthopedics",
+   "m": "2026-01",
+   "n": 35,
+   "d": 8,
+   "dc": 7214.930000000001,
+   "rw": 552.41,
+   "wo": 4,
+   "cat": {
+    "Coding / modifier": 1,
+    "Timely filing": 1,
+    "Eligibility": 4,
+    "Missing information": 1,
+    "Coding / diagnosis": 1
+   },
+   "gaps": {
+    "pa": [
+     0,
+     0
+    ],
+    "el": [
+     11,
+     4
+    ],
+    "mod": [
+     1,
+     1
+    ],
+    "tf": [
+     1,
+     1
+    ],
+    "clean": [
+     21,
+     2
+    ]
+   },
+   "pay": [
+    27,
+    763.0
+   ],
+   "rec": [
+    4,
+    397.0
+   ]
+  },
+  {
+   "p": "Medicaid",
+   "s": "Orthopedics",
+   "m": "2026-02",
+   "n": 45,
+   "d": 10,
+   "dc": 8546.97,
+   "rw": 796.9900000000001,
+   "wo": 5,
+   "cat": {
+    "Eligibility": 6,
+    "Duplicate": 1,
+    "Medical necessity": 2,
+    "Missing information": 1
+   },
+   "gaps": {
+    "pa": [
+     1,
+     0
+    ],
+    "el": [
+     12,
+     6
+    ],
+    "mod": [
+     2,
+     0
+    ],
+    "tf": [
+     1,
+     0
+    ],
+    "clean": [
+     29,
+     3
+    ]
+   },
+   "pay": [
+    35,
+    1038.0
+   ],
+   "rec": [
+    5,
+    490.0
+   ]
+  },
+  {
+   "p": "Medicaid",
+   "s": "Orthopedics",
+   "m": "2026-03",
+   "n": 41,
+   "d": 18,
+   "dc": 20988.82,
+   "rw": 1520.94,
+   "wo": 6,
+   "cat": {
+    "Coding / diagnosis": 1,
+    "Eligibility": 13,
+    "Timely filing": 1,
+    "Prior authorization": 1,
+    "Medical necessity": 2
+   },
+   "gaps": {
+    "pa": [
+     2,
+     2
+    ],
+    "el": [
+     13,
+     13
+    ],
+    "mod": [
+     1,
+     0
+    ],
+    "tf": [
+     1,
+     1
+    ],
+    "clean": [
+     25,
+     4
+    ]
+   },
+   "pay": [
+    23,
+    755.0
+   ],
+   "rec": [
+    12,
+    1163.0
+   ]
+  },
+  {
+   "p": "Medicaid",
+   "s": "Orthopedics",
+   "m": "2026-04",
+   "n": 36,
+   "d": 13,
+   "dc": 11507.259999999998,
+   "rw": 1028.19,
+   "wo": 8,
+   "cat": {
+    "Eligibility": 9,
+    "Prior authorization": 1,
+    "Coding / diagnosis": 1,
+    "Medical necessity": 1,
+    "Timely filing": 1
+   },
+   "gaps": {
+    "pa": [
+     1,
+     1
+    ],
+    "el": [
+     19,
+     11
+    ],
+    "mod": [
+     2,
+     1
+    ],
+    "tf": [
+     1,
+     1
+    ],
+    "clean": [
+     15,
+     2
+    ]
+   },
+   "pay": [
+    23,
+    676.0
+   ],
+   "rec": [
+    5,
+    394.0
+   ]
+  },
+  {
+   "p": "Medicaid",
+   "s": "Orthopedics",
+   "m": "2026-05",
+   "n": 46,
+   "d": 15,
+   "dc": 20295.829999999998,
+   "rw": 1075.57,
+   "wo": 5,
+   "cat": {
+    "Prior authorization": 3,
+    "Coding / diagnosis": 2,
+    "Eligibility": 5,
+    "Coding / modifier": 1,
+    "Missing information": 2,
+    "Duplicate": 1,
+    "Timely filing": 1
+   },
+   "gaps": {
+    "pa": [
+     4,
+     3
+    ],
+    "el": [
+     14,
+     8
+    ],
+    "mod": [
+     1,
+     1
+    ],
+    "tf": [
+     1,
+     1
+    ],
+    "clean": [
+     27,
+     4
+    ]
+   },
+   "pay": [
+    31,
+    920.0
+   ],
+   "rec": [
+    10,
+    924.0
+   ]
+  },
+  {
+   "p": "Medicaid",
+   "s": "Orthopedics",
+   "m": "2026-06",
+   "n": 31,
+   "d": 13,
+   "dc": 16725.66,
+   "rw": 1191.3600000000001,
+   "wo": 7,
+   "cat": {
+    "Eligibility": 8,
+    "Coding / diagnosis": 1,
+    "Prior authorization": 3,
+    "Missing information": 1
+   },
+   "gaps": {
+    "pa": [
+     3,
+     3
+    ],
+    "el": [
+     14,
+     9
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     14,
+     1
+    ]
+   },
+   "pay": [
+    18,
+    464.0
+   ],
+   "rec": [
+    6,
+    673.0
+   ]
+  },
+  {
+   "p": "Medicare",
+   "s": "Dermatology",
+   "m": "2026-01",
+   "n": 85,
+   "d": 7,
+   "dc": 1205.2800000000002,
+   "rw": 535.74,
+   "wo": 5,
+   "cat": {
+    "Eligibility": 2,
+    "Coding / diagnosis": 2,
+    "Medical necessity": 1,
+    "Coding / modifier": 2
+   },
+   "gaps": {
+    "pa": [
+     0,
+     0
+    ],
+    "el": [
+     5,
+     2
+    ],
+    "mod": [
+     2,
+     2
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     73,
+     3
+    ]
+   },
+   "pay": [
+    78,
+    2323.0
+   ],
+   "rec": [
+    2,
+    233.0
+   ]
+  },
+  {
+   "p": "Medicare",
+   "s": "Dermatology",
+   "m": "2026-02",
+   "n": 70,
+   "d": 5,
+   "dc": 685.57,
+   "rw": 351.09000000000003,
+   "wo": 1,
+   "cat": {
+    "Coding / modifier": 1,
+    "Coding / diagnosis": 2,
+    "Eligibility": 1,
+    "Missing information": 1
+   },
+   "gaps": {
+    "pa": [
+     0,
+     0
+    ],
+    "el": [
+     5,
+     2
+    ],
+    "mod": [
+     1,
+     1
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     63,
+     2
+    ]
+   },
+   "pay": [
+    65,
+    1979.0
+   ],
+   "rec": [
+    4,
+    422.0
+   ]
+  },
+  {
+   "p": "Medicare",
+   "s": "Dermatology",
+   "m": "2026-03",
+   "n": 80,
+   "d": 3,
+   "dc": 761.94,
+   "rw": 295.15999999999997,
+   "wo": 1,
+   "cat": {
+    "Eligibility": 2,
+    "Coding / modifier": 1
+   },
+   "gaps": {
+    "pa": [
+     0,
+     0
+    ],
+    "el": [
+     7,
+     2
+    ],
+    "mod": [
+     2,
+     1
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     67,
+     0
+    ]
+   },
+   "pay": [
+    77,
+    2300.0
+   ],
+   "rec": [
+    2,
+    194.0
+   ]
+  },
+  {
+   "p": "Medicare",
+   "s": "Dermatology",
+   "m": "2026-04",
+   "n": 79,
+   "d": 11,
+   "dc": 1438.59,
+   "rw": 786.46,
+   "wo": 7,
+   "cat": {
+    "Eligibility": 4,
+    "Medical necessity": 2,
+    "Coding / modifier": 3,
+    "Prior authorization": 1,
+    "Missing information": 1
+   },
+   "gaps": {
+    "pa": [
+     1,
+     1
+    ],
+    "el": [
+     8,
+     4
+    ],
+    "mod": [
+     3,
+     3
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     63,
+     2
+    ]
+   },
+   "pay": [
+    68,
+    1914.0
+   ],
+   "rec": [
+    4,
+    399.0
+   ]
+  },
+  {
+   "p": "Medicare",
+   "s": "Dermatology",
+   "m": "2026-05",
+   "n": 75,
+   "d": 9,
+   "dc": 1966.8500000000004,
+   "rw": 649.59,
+   "wo": 3,
+   "cat": {
+    "Medical necessity": 1,
+    "Eligibility": 4,
+    "Coding / diagnosis": 2,
+    "Coding / modifier": 2
+   },
+   "gaps": {
+    "pa": [
+     0,
+     0
+    ],
+    "el": [
+     8,
+     4
+    ],
+    "mod": [
+     5,
+     3
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     62,
+     3
+    ]
+   },
+   "pay": [
+    66,
+    1831.0
+   ],
+   "rec": [
+    6,
+    564.0
+   ]
+  },
+  {
+   "p": "Medicare",
+   "s": "Dermatology",
+   "m": "2026-06",
+   "n": 74,
+   "d": 6,
+   "dc": 1010.1600000000001,
+   "rw": 460.72,
+   "wo": 4,
+   "cat": {
+    "Coding / modifier": 2,
+    "Medical necessity": 1,
+    "Eligibility": 1,
+    "Missing information": 1,
+    "Prior authorization": 1
+   },
+   "gaps": {
+    "pa": [
+     2,
+     1
+    ],
+    "el": [
+     10,
+     2
+    ],
+    "mod": [
+     2,
+     2
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     55,
+     1
+    ]
+   },
+   "pay": [
+    68,
+    1885.0
+   ],
+   "rec": [
+    2,
+    228.0
+   ]
+  },
+  {
+   "p": "Medicare",
+   "s": "Gastroenterology",
+   "m": "2026-01",
+   "n": 84,
+   "d": 5,
+   "dc": 5341.87,
+   "rw": 177.87,
+   "wo": 3,
+   "cat": {
+    "Prior authorization": 3,
+    "Eligibility": 2
+   },
+   "gaps": {
+    "pa": [
+     5,
+     3
+    ],
+    "el": [
+     9,
+     2
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     67,
+     0
+    ]
+   },
+   "pay": [
+    79,
+    2224.0
+   ],
+   "rec": [
+    2,
+    190.0
+   ]
+  },
+  {
+   "p": "Medicare",
+   "s": "Gastroenterology",
+   "m": "2026-02",
+   "n": 63,
+   "d": 8,
+   "dc": 8378.97,
+   "rw": 798.67,
+   "wo": 4,
+   "cat": {
+    "Prior authorization": 3,
+    "Coding / diagnosis": 4,
+    "Eligibility": 1
+   },
+   "gaps": {
+    "pa": [
+     5,
+     3
+    ],
+    "el": [
+     4,
+     1
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     51,
+     4
+    ]
+   },
+   "pay": [
+    55,
+    1500.0
+   ],
+   "rec": [
+    4,
+    388.0
+   ]
+  },
+  {
+   "p": "Medicare",
+   "s": "Gastroenterology",
+   "m": "2026-03",
+   "n": 80,
+   "d": 9,
+   "dc": 10284.29,
+   "rw": 796.91,
+   "wo": 4,
+   "cat": {
+    "Prior authorization": 4,
+    "Coding / diagnosis": 1,
+    "Missing information": 1,
+    "Medical necessity": 1,
+    "Eligibility": 2
+   },
+   "gaps": {
+    "pa": [
+     6,
+     4
+    ],
+    "el": [
+     4,
+     2
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     67,
+     2
+    ]
+   },
+   "pay": [
+    71,
+    2112.0
+   ],
+   "rec": [
+    5,
+    502.0
+   ]
+  },
+  {
+   "p": "Medicare",
+   "s": "Gastroenterology",
+   "m": "2026-04",
+   "n": 67,
+   "d": 9,
+   "dc": 11547.79,
+   "rw": 755.8,
+   "wo": 4,
+   "cat": {
+    "Prior authorization": 4,
+    "Medical necessity": 2,
+    "Eligibility": 2,
+    "Missing information": 1
+   },
+   "gaps": {
+    "pa": [
+     8,
+     4
+    ],
+    "el": [
+     4,
+     2
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     53,
+     2
+    ]
+   },
+   "pay": [
+    58,
+    1541.0
+   ],
+   "rec": [
+    5,
+    522.0
+   ]
+  },
+  {
+   "p": "Medicare",
+   "s": "Gastroenterology",
+   "m": "2026-05",
+   "n": 68,
+   "d": 11,
+   "dc": 12485.819999999998,
+   "rw": 1118.17,
+   "wo": 7,
+   "cat": {
+    "Missing information": 2,
+    "Eligibility": 4,
+    "Prior authorization": 4,
+    "Coding / diagnosis": 1
+   },
+   "gaps": {
+    "pa": [
+     6,
+     5
+    ],
+    "el": [
+     9,
+     5
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     50,
+     1
+    ]
+   },
+   "pay": [
+    57,
+    1609.0
+   ],
+   "rec": [
+    4,
+    343.0
+   ]
+  },
+  {
+   "p": "Medicare",
+   "s": "Gastroenterology",
+   "m": "2026-06",
+   "n": 71,
+   "d": 6,
+   "dc": 8484.380000000001,
+   "rw": 498.88,
+   "wo": 2,
+   "cat": {
+    "Missing information": 3,
+    "Eligibility": 3
+   },
+   "gaps": {
+    "pa": [
+     2,
+     0
+    ],
+    "el": [
+     7,
+     3
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     58,
+     0
+    ]
+   },
+   "pay": [
+    65,
+    1958.0
+   ],
+   "rec": [
+    4,
+    321.0
+   ]
+  },
+  {
+   "p": "Medicare",
+   "s": "Ophthalmology",
+   "m": "2026-01",
+   "n": 76,
+   "d": 6,
+   "dc": 3947.0400000000004,
+   "rw": 378.07000000000005,
+   "wo": 5,
+   "cat": {
+    "Missing information": 4,
+    "Eligibility": 1,
+    "Duplicate": 1
+   },
+   "gaps": {
+    "pa": [
+     2,
+     0
+    ],
+    "el": [
+     5,
+     2
+    ],
+    "mod": [
+     1,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     62,
+     1
+    ]
+   },
+   "pay": [
+    70,
+    2200.0
+   ],
+   "rec": [
+    1,
+    65.0
+   ]
+  },
+  {
+   "p": "Medicare",
+   "s": "Ophthalmology",
+   "m": "2026-02",
+   "n": 77,
+   "d": 7,
+   "dc": 6645.81,
+   "rw": 555.74,
+   "wo": 3,
+   "cat": {
+    "Medical necessity": 1,
+    "Prior authorization": 2,
+    "Eligibility": 2,
+    "Duplicate": 1,
+    "Missing information": 1
+   },
+   "gaps": {
+    "pa": [
+     2,
+     2
+    ],
+    "el": [
+     4,
+     2
+    ],
+    "mod": [
+     1,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     66,
+     2
+    ]
+   },
+   "pay": [
+    70,
+    2190.0
+   ],
+   "rec": [
+    4,
+    423.0
+   ]
+  },
+  {
+   "p": "Medicare",
+   "s": "Ophthalmology",
+   "m": "2026-03",
+   "n": 71,
+   "d": 5,
+   "dc": 7429.74,
+   "rw": 453.64,
+   "wo": 2,
+   "cat": {
+    "Eligibility": 1,
+    "Coding / modifier": 2,
+    "Prior authorization": 1,
+    "Coding / diagnosis": 1
+   },
+   "gaps": {
+    "pa": [
+     1,
+     1
+    ],
+    "el": [
+     3,
+     1
+    ],
+    "mod": [
+     2,
+     2
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     61,
+     1
+    ]
+   },
+   "pay": [
+    66,
+    2076.0
+   ],
+   "rec": [
+    3,
+    296.0
+   ]
+  },
+  {
+   "p": "Medicare",
+   "s": "Ophthalmology",
+   "m": "2026-04",
+   "n": 71,
+   "d": 4,
+   "dc": 5237.38,
+   "rw": 399.20000000000005,
+   "wo": 3,
+   "cat": {
+    "Prior authorization": 1,
+    "Missing information": 2,
+    "Coding / modifier": 1
+   },
+   "gaps": {
+    "pa": [
+     1,
+     1
+    ],
+    "el": [
+     7,
+     0
+    ],
+    "mod": [
+     1,
+     1
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     56,
+     0
+    ]
+   },
+   "pay": [
+    67,
+    2048.0
+   ],
+   "rec": [
+    1,
+    68.0
+   ]
+  },
+  {
+   "p": "Medicare",
+   "s": "Ophthalmology",
+   "m": "2026-05",
+   "n": 72,
+   "d": 8,
+   "dc": 11585.88,
+   "rw": 652.0799999999999,
+   "wo": 5,
+   "cat": {
+    "Prior authorization": 1,
+    "Missing information": 2,
+    "Eligibility": 2,
+    "Coding / modifier": 3
+   },
+   "gaps": {
+    "pa": [
+     2,
+     1
+    ],
+    "el": [
+     8,
+     2
+    ],
+    "mod": [
+     3,
+     3
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     55,
+     0
+    ]
+   },
+   "pay": [
+    64,
+    1794.0
+   ],
+   "rec": [
+    3,
+    267.0
+   ]
+  },
+  {
+   "p": "Medicare",
+   "s": "Ophthalmology",
+   "m": "2026-06",
+   "n": 66,
+   "d": 8,
+   "dc": 6644.860000000001,
+   "rw": 642.5,
+   "wo": 4,
+   "cat": {
+    "Medical necessity": 1,
+    "Coding / diagnosis": 2,
+    "Eligibility": 4,
+    "Prior authorization": 1
+   },
+   "gaps": {
+    "pa": [
+     2,
+     1
+    ],
+    "el": [
+     6,
+     4
+    ],
+    "mod": [
+     2,
+     1
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     53,
+     3
+    ]
+   },
+   "pay": [
+    58,
+    1689.0
+   ],
+   "rec": [
+    4,
+    406.0
+   ]
+  },
+  {
+   "p": "Medicare",
+   "s": "Orthopedics",
+   "m": "2026-01",
+   "n": 97,
+   "d": 9,
+   "dc": 10734.75,
+   "rw": 756.2,
+   "wo": 6,
+   "cat": {
+    "Medical necessity": 1,
+    "Missing information": 1,
+    "Prior authorization": 1,
+    "Eligibility": 4,
+    "Coding / modifier": 1,
+    "Duplicate": 1
+   },
+   "gaps": {
+    "pa": [
+     2,
+     1
+    ],
+    "el": [
+     14,
+     5
+    ],
+    "mod": [
+     2,
+     1
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     78,
+     2
+    ]
+   },
+   "pay": [
+    88,
+    2696.0
+   ],
+   "rec": [
+    3,
+    272.0
+   ]
+  },
+  {
+   "p": "Medicare",
+   "s": "Orthopedics",
+   "m": "2026-02",
+   "n": 74,
+   "d": 8,
+   "dc": 13632.310000000001,
+   "rw": 752.1700000000001,
+   "wo": 3,
+   "cat": {
+    "Missing information": 1,
+    "Coding / modifier": 1,
+    "Medical necessity": 2,
+    "Eligibility": 3,
+    "Coding / diagnosis": 1
+   },
+   "gaps": {
+    "pa": [
+     1,
+     1
+    ],
+    "el": [
+     7,
+     3
+    ],
+    "mod": [
+     2,
+     1
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     62,
+     3
+    ]
+   },
+   "pay": [
+    66,
+    1962.0
+   ],
+   "rec": [
+    5,
+    491.0
+   ]
+  },
+  {
+   "p": "Medicare",
+   "s": "Orthopedics",
+   "m": "2026-03",
+   "n": 62,
+   "d": 7,
+   "dc": 8358.55,
+   "rw": 561.03,
+   "wo": 3,
+   "cat": {
+    "Coding / modifier": 2,
+    "Duplicate": 1,
+    "Coding / diagnosis": 1,
+    "Eligibility": 1,
+    "Missing information": 1,
+    "Prior authorization": 1
+   },
+   "gaps": {
+    "pa": [
+     2,
+     1
+    ],
+    "el": [
+     4,
+     1
+    ],
+    "mod": [
+     3,
+     2
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     51,
+     2
+    ]
+   },
+   "pay": [
+    55,
+    1634.0
+   ],
+   "rec": [
+    4,
+    429.0
+   ]
+  },
+  {
+   "p": "Medicare",
+   "s": "Orthopedics",
+   "m": "2026-04",
+   "n": 86,
+   "d": 7,
+   "dc": 6185.209999999999,
+   "rw": 498.05,
+   "wo": 2,
+   "cat": {
+    "Eligibility": 2,
+    "Coding / modifier": 4,
+    "Missing information": 1
+   },
+   "gaps": {
+    "pa": [
+     0,
+     0
+    ],
+    "el": [
+     10,
+     2
+    ],
+    "mod": [
+     5,
+     4
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     67,
+     0
+    ]
+   },
+   "pay": [
+    79,
+    2304.0
+   ],
+   "rec": [
+    5,
+    409.0
+   ]
+  },
+  {
+   "p": "Medicare",
+   "s": "Orthopedics",
+   "m": "2026-05",
+   "n": 71,
+   "d": 7,
+   "dc": 13103.17,
+   "rw": 473.83000000000004,
+   "wo": 2,
+   "cat": {
+    "Eligibility": 3,
+    "Coding / modifier": 1,
+    "Prior authorization": 1,
+    "Coding / diagnosis": 1,
+    "Missing information": 1
+   },
+   "gaps": {
+    "pa": [
+     2,
+     1
+    ],
+    "el": [
+     3,
+     3
+    ],
+    "mod": [
+     3,
+     2
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     60,
+     1
+    ]
+   },
+   "pay": [
+    64,
+    1877.0
+   ],
+   "rec": [
+    5,
+    543.0
+   ]
+  },
+  {
+   "p": "Medicare",
+   "s": "Orthopedics",
+   "m": "2026-06",
+   "n": 72,
+   "d": 8,
+   "dc": 6358.43,
+   "rw": 560.39,
+   "wo": 5,
+   "cat": {
+    "Missing information": 1,
+    "Coding / modifier": 3,
+    "Eligibility": 2,
+    "Duplicate": 2
+   },
+   "gaps": {
+    "pa": [
+     0,
+     0
+    ],
+    "el": [
+     8,
+     2
+    ],
+    "mod": [
+     5,
+     3
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     56,
+     2
+    ]
+   },
+   "pay": [
+    64,
+    1743.0
+   ],
+   "rec": [
+    3,
+    219.0
+   ]
+  },
+  {
+   "p": "SunCoast Health",
+   "s": "Dermatology",
+   "m": "2026-01",
+   "n": 26,
+   "d": 3,
+   "dc": 408.43999999999994,
+   "rw": 279.15999999999997,
+   "wo": 0,
+   "cat": {
+    "Eligibility": 1,
+    "Coding / diagnosis": 1,
+    "Timely filing": 1
+   },
+   "gaps": {
+    "pa": [
+     0,
+     0
+    ],
+    "el": [
+     3,
+     1
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     1,
+     1
+    ],
+    "clean": [
+     21,
+     2
+    ]
+   },
+   "pay": [
+    23,
+    646.0
+   ],
+   "rec": [
+    3,
+    258.0
+   ]
+  },
+  {
+   "p": "SunCoast Health",
+   "s": "Dermatology",
+   "m": "2026-02",
+   "n": 26,
+   "d": 4,
+   "dc": 761.8300000000002,
+   "rw": 394.8,
+   "wo": 2,
+   "cat": {
+    "Duplicate": 1,
+    "Medical necessity": 1,
+    "Missing information": 1,
+    "Prior authorization": 1
+   },
+   "gaps": {
+    "pa": [
+     3,
+     1
+    ],
+    "el": [
+     2,
+     0
+    ],
+    "mod": [
+     2,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     18,
+     2
+    ]
+   },
+   "pay": [
+    22,
+    688.0
+   ],
+   "rec": [
+    2,
+    231.0
+   ]
+  },
+  {
+   "p": "SunCoast Health",
+   "s": "Dermatology",
+   "m": "2026-03",
+   "n": 34,
+   "d": 2,
+   "dc": 182.37,
+   "rw": 92.66,
+   "wo": 1,
+   "cat": {
+    "Medical necessity": 1,
+    "Eligibility": 1
+   },
+   "gaps": {
+    "pa": [
+     0,
+     0
+    ],
+    "el": [
+     4,
+     1
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     29,
+     1
+    ]
+   },
+   "pay": [
+    32,
+    975.0
+   ],
+   "rec": [
+    1,
+    68.0
+   ]
+  },
+  {
+   "p": "SunCoast Health",
+   "s": "Dermatology",
+   "m": "2026-04",
+   "n": 45,
+   "d": 3,
+   "dc": 846.71,
+   "rw": 217.21999999999997,
+   "wo": 2,
+   "cat": {
+    "Coding / modifier": 1,
+    "Duplicate": 1,
+    "Eligibility": 1
+   },
+   "gaps": {
+    "pa": [
+     0,
+     0
+    ],
+    "el": [
+     6,
+     2
+    ],
+    "mod": [
+     2,
+     1
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     38,
+     1
+    ]
+   },
+   "pay": [
+    42,
+    1284.0
+   ],
+   "rec": [
+    1,
+    90.0
+   ]
+  },
+  {
+   "p": "SunCoast Health",
+   "s": "Dermatology",
+   "m": "2026-05",
+   "n": 39,
+   "d": 4,
+   "dc": 444.3,
+   "rw": 267.35,
+   "wo": 2,
+   "cat": {
+    "Eligibility": 1,
+    "Prior authorization": 1,
+    "Timely filing": 1,
+    "Coding / diagnosis": 1
+   },
+   "gaps": {
+    "pa": [
+     1,
+     1
+    ],
+    "el": [
+     4,
+     1
+    ],
+    "mod": [
+     1,
+     0
+    ],
+    "tf": [
+     1,
+     1
+    ],
+    "clean": [
+     31,
+     2
+    ]
+   },
+   "pay": [
+    35,
+    1113.0
+   ],
+   "rec": [
+    2,
+    188.0
+   ]
+  },
+  {
+   "p": "SunCoast Health",
+   "s": "Dermatology",
+   "m": "2026-06",
+   "n": 28,
+   "d": 4,
+   "dc": 591.33,
+   "rw": 262.88,
+   "wo": 2,
+   "cat": {
+    "Missing information": 1,
+    "Timely filing": 2,
+    "Eligibility": 1
+   },
+   "gaps": {
+    "pa": [
+     0,
+     0
+    ],
+    "el": [
+     5,
+     2
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     3,
+     2
+    ],
+    "clean": [
+     19,
+     1
+    ]
+   },
+   "pay": [
+    24,
+    801.0
+   ],
+   "rec": [
+    2,
+    156.0
+   ]
+  },
+  {
+   "p": "SunCoast Health",
+   "s": "Gastroenterology",
+   "m": "2026-01",
+   "n": 34,
+   "d": 2,
+   "dc": 1996.94,
+   "rw": 204.06,
+   "wo": 1,
+   "cat": {
+    "Prior authorization": 1,
+    "Eligibility": 1
+   },
+   "gaps": {
+    "pa": [
+     2,
+     1
+    ],
+    "el": [
+     8,
+     1
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     22,
+     0
+    ]
+   },
+   "pay": [
+    32,
+    991.0
+   ],
+   "rec": [
+    1,
+    114.0
+   ]
+  },
+  {
+   "p": "SunCoast Health",
+   "s": "Gastroenterology",
+   "m": "2026-02",
+   "n": 24,
+   "d": 4,
+   "dc": 4813.1,
+   "rw": 466.3,
+   "wo": 3,
+   "cat": {
+    "Prior authorization": 2,
+    "Eligibility": 1,
+    "Duplicate": 1
+   },
+   "gaps": {
+    "pa": [
+     3,
+     2
+    ],
+    "el": [
+     4,
+     1
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     17,
+     1
+    ]
+   },
+   "pay": [
+    20,
+    585.0
+   ],
+   "rec": [
+    1,
+    121.0
+   ]
+  },
+  {
+   "p": "SunCoast Health",
+   "s": "Gastroenterology",
+   "m": "2026-03",
+   "n": 37,
+   "d": 5,
+   "dc": 6025.07,
+   "rw": 395.23,
+   "wo": 1,
+   "cat": {
+    "Eligibility": 2,
+    "Medical necessity": 1,
+    "Prior authorization": 1,
+    "Duplicate": 1
+   },
+   "gaps": {
+    "pa": [
+     3,
+     1
+    ],
+    "el": [
+     4,
+     3
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     30,
+     2
+    ]
+   },
+   "pay": [
+    32,
+    870.0
+   ],
+   "rec": [
+    4,
+    396.0
+   ]
+  },
+  {
+   "p": "SunCoast Health",
+   "s": "Gastroenterology",
+   "m": "2026-04",
+   "n": 25,
+   "d": 5,
+   "dc": 5834.49,
+   "rw": 439.56,
+   "wo": 3,
+   "cat": {
+    "Coding / diagnosis": 2,
+    "Prior authorization": 2,
+    "Timely filing": 1
+   },
+   "gaps": {
+    "pa": [
+     3,
+     2
+    ],
+    "el": [
+     1,
+     0
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     1,
+     1
+    ],
+    "clean": [
+     21,
+     3
+    ]
+   },
+   "pay": [
+    20,
+    593.0
+   ],
+   "rec": [
+    2,
+    166.0
+   ]
+  },
+  {
+   "p": "SunCoast Health",
+   "s": "Gastroenterology",
+   "m": "2026-05",
+   "n": 33,
+   "d": 4,
+   "dc": 5278.21,
+   "rw": 241.4,
+   "wo": 3,
+   "cat": {
+    "Prior authorization": 1,
+    "Eligibility": 2,
+    "Missing information": 1
+   },
+   "gaps": {
+    "pa": [
+     1,
+     1
+    ],
+    "el": [
+     4,
+     2
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     27,
+     0
+    ]
+   },
+   "pay": [
+    29,
+    878.0
+   ],
+   "rec": [
+    1,
+    110.0
+   ]
+  },
+  {
+   "p": "SunCoast Health",
+   "s": "Gastroenterology",
+   "m": "2026-06",
+   "n": 25,
+   "d": 2,
+   "dc": 3046.56,
+   "rw": 199.86,
+   "wo": 0,
+   "cat": {
+    "Coding / diagnosis": 2
+   },
+   "gaps": {
+    "pa": [
+     1,
+     0
+    ],
+    "el": [
+     3,
+     0
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     21,
+     2
+    ]
+   },
+   "pay": [
+    23,
+    663.0
+   ],
+   "rec": [
+    2,
+    228.0
+   ]
+  },
+  {
+   "p": "SunCoast Health",
+   "s": "Ophthalmology",
+   "m": "2026-01",
+   "n": 32,
+   "d": 4,
+   "dc": 5810.6900000000005,
+   "rw": 296.52,
+   "wo": 2,
+   "cat": {
+    "Coding / diagnosis": 2,
+    "Eligibility": 1,
+    "Prior authorization": 1
+   },
+   "gaps": {
+    "pa": [
+     1,
+     1
+    ],
+    "el": [
+     1,
+     1
+    ],
+    "mod": [
+     1,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     28,
+     2
+    ]
+   },
+   "pay": [
+    28,
+    816.0
+   ],
+   "rec": [
+    2,
+    235.0
+   ]
+  },
+  {
+   "p": "SunCoast Health",
+   "s": "Ophthalmology",
+   "m": "2026-02",
+   "n": 33,
+   "d": 7,
+   "dc": 8489.109999999999,
+   "rw": 640.4100000000001,
+   "wo": 3,
+   "cat": {
+    "Coding / modifier": 2,
+    "Eligibility": 1,
+    "Duplicate": 1,
+    "Prior authorization": 2,
+    "Timely filing": 1
+   },
+   "gaps": {
+    "pa": [
+     4,
+     4
+    ],
+    "el": [
+     4,
+     2
+    ],
+    "mod": [
+     2,
+     2
+    ],
+    "tf": [
+     1,
+     1
+    ],
+    "clean": [
+     25,
+     2
+    ]
+   },
+   "pay": [
+    26,
+    737.0
+   ],
+   "rec": [
+    4,
+    403.0
+   ]
+  },
+  {
+   "p": "SunCoast Health",
+   "s": "Ophthalmology",
+   "m": "2026-03",
+   "n": 28,
+   "d": 1,
+   "dc": 178.03,
+   "rw": 26.88,
+   "wo": 0,
+   "cat": {
+    "Missing information": 1
+   },
+   "gaps": {
+    "pa": [
+     0,
+     0
+    ],
+    "el": [
+     2,
+     0
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     25,
+     0
+    ]
+   },
+   "pay": [
+    27,
+    820.0
+   ],
+   "rec": [
+    1,
+    73.0
+   ]
+  },
+  {
+   "p": "SunCoast Health",
+   "s": "Ophthalmology",
+   "m": "2026-04",
+   "n": 25,
+   "d": 1,
+   "dc": 157.28,
+   "rw": 42.05,
+   "wo": 1,
+   "cat": {
+    "Eligibility": 1
+   },
+   "gaps": {
+    "pa": [
+     0,
+     0
+    ],
+    "el": [
+     5,
+     1
+    ],
+    "mod": [
+     2,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     17,
+     0
+    ]
+   },
+   "pay": [
+    24,
+    705.0
+   ],
+   "rec": [
+    0,
+    0.0
+   ]
+  },
+  {
+   "p": "SunCoast Health",
+   "s": "Ophthalmology",
+   "m": "2026-05",
+   "n": 32,
+   "d": 6,
+   "dc": 6355.73,
+   "rw": 422.43000000000006,
+   "wo": 3,
+   "cat": {
+    "Coding / diagnosis": 1,
+    "Coding / modifier": 1,
+    "Prior authorization": 2,
+    "Timely filing": 1,
+    "Eligibility": 1
+   },
+   "gaps": {
+    "pa": [
+     4,
+     2
+    ],
+    "el": [
+     5,
+     2
+    ],
+    "mod": [
+     2,
+     1
+    ],
+    "tf": [
+     2,
+     2
+    ],
+    "clean": [
+     22,
+     2
+    ]
+   },
+   "pay": [
+    26,
+    771.0
+   ],
+   "rec": [
+    3,
+    318.0
+   ]
+  },
+  {
+   "p": "SunCoast Health",
+   "s": "Ophthalmology",
+   "m": "2026-06",
+   "n": 34,
+   "d": 2,
+   "dc": 1565.03,
+   "rw": 167.82999999999998,
+   "wo": 1,
+   "cat": {
+    "Eligibility": 2
+   },
+   "gaps": {
+    "pa": [
+     0,
+     0
+    ],
+    "el": [
+     9,
+     2
+    ],
+    "mod": [
+     1,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     23,
+     0
+    ]
+   },
+   "pay": [
+    32,
+    897.0
+   ],
+   "rec": [
+    1,
+    77.0
+   ]
+  },
+  {
+   "p": "SunCoast Health",
+   "s": "Orthopedics",
+   "m": "2026-01",
+   "n": 30,
+   "d": 2,
+   "dc": 1619.78,
+   "rw": 85.7,
+   "wo": 2,
+   "cat": {
+    "Prior authorization": 1,
+    "Eligibility": 1
+   },
+   "gaps": {
+    "pa": [
+     2,
+     1
+    ],
+    "el": [
+     2,
+     1
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     23,
+     0
+    ]
+   },
+   "pay": [
+    28,
+    779.0
+   ],
+   "rec": [
+    0,
+    0.0
+   ]
+  },
+  {
+   "p": "SunCoast Health",
+   "s": "Orthopedics",
+   "m": "2026-02",
+   "n": 20,
+   "d": 1,
+   "dc": 1535.51,
+   "rw": 39.81,
+   "wo": 0,
+   "cat": {
+    "Eligibility": 1
+   },
+   "gaps": {
+    "pa": [
+     0,
+     0
+    ],
+    "el": [
+     1,
+     1
+    ],
+    "mod": [
+     1,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     18,
+     0
+    ]
+   },
+   "pay": [
+    19,
+    543.0
+   ],
+   "rec": [
+    1,
+    79.0
+   ]
+  },
+  {
+   "p": "SunCoast Health",
+   "s": "Orthopedics",
+   "m": "2026-03",
+   "n": 33,
+   "d": 3,
+   "dc": 1791.4699999999998,
+   "rw": 258.85,
+   "wo": 1,
+   "cat": {
+    "Timely filing": 2,
+    "Coding / diagnosis": 1
+   },
+   "gaps": {
+    "pa": [
+     0,
+     0
+    ],
+    "el": [
+     5,
+     0
+    ],
+    "mod": [
+     1,
+     0
+    ],
+    "tf": [
+     2,
+     2
+    ],
+    "clean": [
+     27,
+     3
+    ]
+   },
+   "pay": [
+    30,
+    895.0
+   ],
+   "rec": [
+    2,
+    184.0
+   ]
+  },
+  {
+   "p": "SunCoast Health",
+   "s": "Orthopedics",
+   "m": "2026-04",
+   "n": 28,
+   "d": 8,
+   "dc": 6879.31,
+   "rw": 631.31,
+   "wo": 6,
+   "cat": {
+    "Eligibility": 3,
+    "Prior authorization": 1,
+    "Medical necessity": 1,
+    "Coding / modifier": 1,
+    "Coding / diagnosis": 1,
+    "Timely filing": 1
+   },
+   "gaps": {
+    "pa": [
+     1,
+     1
+    ],
+    "el": [
+     4,
+     3
+    ],
+    "mod": [
+     3,
+     2
+    ],
+    "tf": [
+     1,
+     1
+    ],
+    "clean": [
+     19,
+     3
+    ]
+   },
+   "pay": [
+    20,
+    543.0
+   ],
+   "rec": [
+    2,
+    197.0
+   ]
+  },
+  {
+   "p": "SunCoast Health",
+   "s": "Orthopedics",
+   "m": "2026-05",
+   "n": 33,
+   "d": 7,
+   "dc": 6079.859999999999,
+   "rw": 538.68,
+   "wo": 2,
+   "cat": {
+    "Coding / modifier": 2,
+    "Missing information": 1,
+    "Timely filing": 1,
+    "Eligibility": 1,
+    "Coding / diagnosis": 1,
+    "Prior authorization": 1
+   },
+   "gaps": {
+    "pa": [
+     1,
+     1
+    ],
+    "el": [
+     3,
+     1
+    ],
+    "mod": [
+     3,
+     2
+    ],
+    "tf": [
+     1,
+     1
+    ],
+    "clean": [
+     25,
+     2
+    ]
+   },
+   "pay": [
+    26,
+    694.0
+   ],
+   "rec": [
+    5,
+    436.0
+   ]
+  },
+  {
+   "p": "SunCoast Health",
+   "s": "Orthopedics",
+   "m": "2026-06",
+   "n": 17,
+   "d": 1,
+   "dc": 251.69,
+   "rw": 50.03,
+   "wo": 0,
+   "cat": {
+    "Coding / diagnosis": 1
+   },
+   "gaps": {
+    "pa": [
+     0,
+     0
+    ],
+    "el": [
+     0,
+     0
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     16,
+     1
+    ]
+   },
+   "pay": [
+    16,
+    496.0
+   ],
+   "rec": [
+    1,
+    61.0
+   ]
+  },
+  {
+   "p": "UnityHealth",
+   "s": "Dermatology",
+   "m": "2026-01",
+   "n": 51,
+   "d": 5,
+   "dc": 1164.5900000000001,
+   "rw": 496.43,
+   "wo": 3,
+   "cat": {
+    "Eligibility": 2,
+    "Timely filing": 1,
+    "Missing information": 2
+   },
+   "gaps": {
+    "pa": [
+     0,
+     0
+    ],
+    "el": [
+     6,
+     3
+    ],
+    "mod": [
+     4,
+     0
+    ],
+    "tf": [
+     1,
+     1
+    ],
+    "clean": [
+     40,
+     1
+    ]
+   },
+   "pay": [
+    46,
+    1422.0
+   ],
+   "rec": [
+    2,
+    190.0
+   ]
+  },
+  {
+   "p": "UnityHealth",
+   "s": "Dermatology",
+   "m": "2026-02",
+   "n": 37,
+   "d": 4,
+   "dc": 712.53,
+   "rw": 265.05,
+   "wo": 2,
+   "cat": {
+    "Eligibility": 1,
+    "Coding / diagnosis": 1,
+    "Coding / modifier": 1,
+    "Missing information": 1
+   },
+   "gaps": {
+    "pa": [
+     1,
+     1
+    ],
+    "el": [
+     4,
+     1
+    ],
+    "mod": [
+     1,
+     1
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     30,
+     1
+    ]
+   },
+   "pay": [
+    33,
+    1031.0
+   ],
+   "rec": [
+    2,
+    188.0
+   ]
+  },
+  {
+   "p": "UnityHealth",
+   "s": "Dermatology",
+   "m": "2026-03",
+   "n": 47,
+   "d": 6,
+   "dc": 863.33,
+   "rw": 483.22999999999996,
+   "wo": 3,
+   "cat": {
+    "Eligibility": 2,
+    "Duplicate": 1,
+    "Timely filing": 1,
+    "Coding / diagnosis": 2
+   },
+   "gaps": {
+    "pa": [
+     0,
+     0
+    ],
+    "el": [
+     5,
+     2
+    ],
+    "mod": [
+     2,
+     1
+    ],
+    "tf": [
+     1,
+     1
+    ],
+    "clean": [
+     41,
+     4
+    ]
+   },
+   "pay": [
+    41,
+    1215.0
+   ],
+   "rec": [
+    3,
+    316.0
+   ]
+  },
+  {
+   "p": "UnityHealth",
+   "s": "Dermatology",
+   "m": "2026-04",
+   "n": 44,
+   "d": 4,
+   "dc": 631.79,
+   "rw": 354.1,
+   "wo": 3,
+   "cat": {
+    "Timely filing": 2,
+    "Eligibility": 2
+   },
+   "gaps": {
+    "pa": [
+     0,
+     0
+    ],
+    "el": [
+     5,
+     2
+    ],
+    "mod": [
+     1,
+     1
+    ],
+    "tf": [
+     2,
+     2
+    ],
+    "clean": [
+     37,
+     2
+    ]
+   },
+   "pay": [
+    40,
+    1217.0
+   ],
+   "rec": [
+    1,
+    101.0
+   ]
+  },
+  {
+   "p": "UnityHealth",
+   "s": "Dermatology",
+   "m": "2026-05",
+   "n": 47,
+   "d": 7,
+   "dc": 1528.1300000000003,
+   "rw": 497.20000000000005,
+   "wo": 2,
+   "cat": {
+    "Coding / diagnosis": 2,
+    "Coding / modifier": 1,
+    "Missing information": 1,
+    "Duplicate": 1,
+    "Medical necessity": 1,
+    "Eligibility": 1
+   },
+   "gaps": {
+    "pa": [
+     0,
+     0
+    ],
+    "el": [
+     6,
+     2
+    ],
+    "mod": [
+     2,
+     1
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     39,
+     4
+    ]
+   },
+   "pay": [
+    40,
+    1188.0
+   ],
+   "rec": [
+    5,
+    501.0
+   ]
+  },
+  {
+   "p": "UnityHealth",
+   "s": "Dermatology",
+   "m": "2026-06",
+   "n": 42,
+   "d": 5,
+   "dc": 953.88,
+   "rw": 365.83000000000004,
+   "wo": 3,
+   "cat": {
+    "Coding / modifier": 2,
+    "Eligibility": 1,
+    "Missing information": 1,
+    "Timely filing": 1
+   },
+   "gaps": {
+    "pa": [
+     0,
+     0
+    ],
+    "el": [
+     3,
+     2
+    ],
+    "mod": [
+     4,
+     2
+    ],
+    "tf": [
+     2,
+     2
+    ],
+    "clean": [
+     33,
+     0
+    ]
+   },
+   "pay": [
+    37,
+    1082.0
+   ],
+   "rec": [
+    2,
+    236.0
+   ]
+  },
+  {
+   "p": "UnityHealth",
+   "s": "Gastroenterology",
+   "m": "2026-01",
+   "n": 48,
+   "d": 14,
+   "dc": 17610.219999999998,
+   "rw": 1393.64,
+   "wo": 4,
+   "cat": {
+    "Eligibility": 4,
+    "Prior authorization": 6,
+    "Duplicate": 1,
+    "Timely filing": 2,
+    "Medical necessity": 1
+   },
+   "gaps": {
+    "pa": [
+     10,
+     6
+    ],
+    "el": [
+     5,
+     5
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     2,
+     2
+    ],
+    "clean": [
+     31,
+     3
+    ]
+   },
+   "pay": [
+    34,
+    1025.0
+   ],
+   "rec": [
+    10,
+    973.0
+   ]
+  },
+  {
+   "p": "UnityHealth",
+   "s": "Gastroenterology",
+   "m": "2026-02",
+   "n": 34,
+   "d": 7,
+   "dc": 7234.020000000001,
+   "rw": 457.98,
+   "wo": 2,
+   "cat": {
+    "Prior authorization": 5,
+    "Coding / diagnosis": 1,
+    "Eligibility": 1
+   },
+   "gaps": {
+    "pa": [
+     7,
+     5
+    ],
+    "el": [
+     1,
+     1
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     1,
+     1
+    ],
+    "clean": [
+     25,
+     1
+    ]
+   },
+   "pay": [
+    27,
+    810.0
+   ],
+   "rec": [
+    5,
+    429.0
+   ]
+  },
+  {
+   "p": "UnityHealth",
+   "s": "Gastroenterology",
+   "m": "2026-03",
+   "n": 50,
+   "d": 11,
+   "dc": 12229.43,
+   "rw": 894.04,
+   "wo": 7,
+   "cat": {
+    "Medical necessity": 3,
+    "Eligibility": 2,
+    "Missing information": 1,
+    "Prior authorization": 4,
+    "Coding / diagnosis": 1
+   },
+   "gaps": {
+    "pa": [
+     8,
+     5
+    ],
+    "el": [
+     7,
+     3
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     36,
+     4
+    ]
+   },
+   "pay": [
+    39,
+    1226.0
+   ],
+   "rec": [
+    4,
+    411.0
+   ]
+  },
+  {
+   "p": "UnityHealth",
+   "s": "Gastroenterology",
+   "m": "2026-04",
+   "n": 48,
+   "d": 8,
+   "dc": 10161.619999999999,
+   "rw": 507.63,
+   "wo": 3,
+   "cat": {
+    "Eligibility": 3,
+    "Coding / diagnosis": 2,
+    "Duplicate": 1,
+    "Prior authorization": 2
+   },
+   "gaps": {
+    "pa": [
+     3,
+     2
+    ],
+    "el": [
+     8,
+     3
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     37,
+     3
+    ]
+   },
+   "pay": [
+    40,
+    1157.0
+   ],
+   "rec": [
+    5,
+    509.0
+   ]
+  },
+  {
+   "p": "UnityHealth",
+   "s": "Gastroenterology",
+   "m": "2026-05",
+   "n": 57,
+   "d": 11,
+   "dc": 11623.640000000001,
+   "rw": 648.53,
+   "wo": 4,
+   "cat": {
+    "Prior authorization": 6,
+    "Coding / diagnosis": 1,
+    "Timely filing": 1,
+    "Medical necessity": 1,
+    "Eligibility": 2
+   },
+   "gaps": {
+    "pa": [
+     10,
+     6
+    ],
+    "el": [
+     9,
+     4
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     1,
+     1
+    ],
+    "clean": [
+     39,
+     2
+    ]
+   },
+   "pay": [
+    46,
+    1392.0
+   ],
+   "rec": [
+    7,
+    567.0
+   ]
+  },
+  {
+   "p": "UnityHealth",
+   "s": "Gastroenterology",
+   "m": "2026-06",
+   "n": 45,
+   "d": 13,
+   "dc": 13849.720000000003,
+   "rw": 1204.2,
+   "wo": 9,
+   "cat": {
+    "Medical necessity": 1,
+    "Timely filing": 4,
+    "Prior authorization": 6,
+    "Eligibility": 1,
+    "Duplicate": 1
+   },
+   "gaps": {
+    "pa": [
+     10,
+     7
+    ],
+    "el": [
+     4,
+     2
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     5,
+     4
+    ],
+    "clean": [
+     30,
+     4
+    ]
+   },
+   "pay": [
+    32,
+    942.0
+   ],
+   "rec": [
+    4,
+    344.0
+   ]
+  },
+  {
+   "p": "UnityHealth",
+   "s": "Ophthalmology",
+   "m": "2026-01",
+   "n": 43,
+   "d": 4,
+   "dc": 6610.28,
+   "rw": 270.03,
+   "wo": 2,
+   "cat": {
+    "Medical necessity": 1,
+    "Prior authorization": 2,
+    "Eligibility": 1
+   },
+   "gaps": {
+    "pa": [
+     4,
+     2
+    ],
+    "el": [
+     4,
+     1
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     35,
+     1
+    ]
+   },
+   "pay": [
+    39,
+    1046.0
+   ],
+   "rec": [
+    2,
+    158.0
+   ]
+  },
+  {
+   "p": "UnityHealth",
+   "s": "Ophthalmology",
+   "m": "2026-02",
+   "n": 44,
+   "d": 10,
+   "dc": 9362.369999999999,
+   "rw": 840.24,
+   "wo": 4,
+   "cat": {
+    "Prior authorization": 2,
+    "Missing information": 3,
+    "Medical necessity": 2,
+    "Eligibility": 2,
+    "Coding / diagnosis": 1
+   },
+   "gaps": {
+    "pa": [
+     2,
+     2
+    ],
+    "el": [
+     8,
+     4
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     33,
+     3
+    ]
+   },
+   "pay": [
+    34,
+    952.0
+   ],
+   "rec": [
+    6,
+    494.0
+   ]
+  },
+  {
+   "p": "UnityHealth",
+   "s": "Ophthalmology",
+   "m": "2026-03",
+   "n": 46,
+   "d": 6,
+   "dc": 4914.779999999999,
+   "rw": 399.17999999999995,
+   "wo": 2,
+   "cat": {
+    "Eligibility": 4,
+    "Timely filing": 1,
+    "Duplicate": 1
+   },
+   "gaps": {
+    "pa": [
+     1,
+     1
+    ],
+    "el": [
+     6,
+     4
+    ],
+    "mod": [
+     1,
+     0
+    ],
+    "tf": [
+     1,
+     1
+    ],
+    "clean": [
+     38,
+     2
+    ]
+   },
+   "pay": [
+    40,
+    1204.0
+   ],
+   "rec": [
+    4,
+    401.0
+   ]
+  },
+  {
+   "p": "UnityHealth",
+   "s": "Ophthalmology",
+   "m": "2026-04",
+   "n": 46,
+   "d": 7,
+   "dc": 10291.189999999999,
+   "rw": 577.18,
+   "wo": 1,
+   "cat": {
+    "Duplicate": 1,
+    "Prior authorization": 4,
+    "Missing information": 1,
+    "Coding / diagnosis": 1
+   },
+   "gaps": {
+    "pa": [
+     6,
+     4
+    ],
+    "el": [
+     6,
+     1
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     34,
+     2
+    ]
+   },
+   "pay": [
+    39,
+    955.0
+   ],
+   "rec": [
+    6,
+    563.0
+   ]
+  },
+  {
+   "p": "UnityHealth",
+   "s": "Ophthalmology",
+   "m": "2026-05",
+   "n": 45,
+   "d": 12,
+   "dc": 7754.370000000001,
+   "rw": 1083.1000000000001,
+   "wo": 7,
+   "cat": {
+    "Timely filing": 4,
+    "Coding / modifier": 2,
+    "Medical necessity": 3,
+    "Prior authorization": 1,
+    "Eligibility": 1,
+    "Missing information": 1
+   },
+   "gaps": {
+    "pa": [
+     2,
+     2
+    ],
+    "el": [
+     3,
+     1
+    ],
+    "mod": [
+     3,
+     2
+    ],
+    "tf": [
+     5,
+     4
+    ],
+    "clean": [
+     36,
+     7
+    ]
+   },
+   "pay": [
+    33,
+    989.0
+   ],
+   "rec": [
+    5,
+    491.0
+   ]
+  },
+  {
+   "p": "UnityHealth",
+   "s": "Ophthalmology",
+   "m": "2026-06",
+   "n": 52,
+   "d": 6,
+   "dc": 7720.73,
+   "rw": 327.55,
+   "wo": 4,
+   "cat": {
+    "Eligibility": 2,
+    "Prior authorization": 2,
+    "Timely filing": 1,
+    "Medical necessity": 1
+   },
+   "gaps": {
+    "pa": [
+     3,
+     2
+    ],
+    "el": [
+     3,
+     2
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     1,
+     1
+    ],
+    "clean": [
+     45,
+     2
+    ]
+   },
+   "pay": [
+    46,
+    1408.0
+   ],
+   "rec": [
+    2,
+    236.0
+   ]
+  },
+  {
+   "p": "UnityHealth",
+   "s": "Orthopedics",
+   "m": "2026-01",
+   "n": 39,
+   "d": 6,
+   "dc": 4985.57,
+   "rw": 402.86,
+   "wo": 1,
+   "cat": {
+    "Prior authorization": 2,
+    "Medical necessity": 1,
+    "Coding / modifier": 2,
+    "Duplicate": 1
+   },
+   "gaps": {
+    "pa": [
+     3,
+     2
+    ],
+    "el": [
+     4,
+     1
+    ],
+    "mod": [
+     3,
+     2
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     28,
+     2
+    ]
+   },
+   "pay": [
+    33,
+    889.0
+   ],
+   "rec": [
+    5,
+    492.0
+   ]
+  },
+  {
+   "p": "UnityHealth",
+   "s": "Orthopedics",
+   "m": "2026-02",
+   "n": 47,
+   "d": 6,
+   "dc": 4891.66,
+   "rw": 371.38,
+   "wo": 1,
+   "cat": {
+    "Timely filing": 2,
+    "Coding / modifier": 1,
+    "Coding / diagnosis": 1,
+    "Prior authorization": 2
+   },
+   "gaps": {
+    "pa": [
+     4,
+     2
+    ],
+    "el": [
+     2,
+     0
+    ],
+    "mod": [
+     1,
+     1
+    ],
+    "tf": [
+     2,
+     2
+    ],
+    "clean": [
+     38,
+     3
+    ]
+   },
+   "pay": [
+    41,
+    1197.0
+   ],
+   "rec": [
+    5,
+    445.0
+   ]
+  },
+  {
+   "p": "UnityHealth",
+   "s": "Orthopedics",
+   "m": "2026-03",
+   "n": 35,
+   "d": 4,
+   "dc": 8981.67,
+   "rw": 280.11,
+   "wo": 3,
+   "cat": {
+    "Coding / modifier": 1,
+    "Prior authorization": 2,
+    "Eligibility": 1
+   },
+   "gaps": {
+    "pa": [
+     2,
+     2
+    ],
+    "el": [
+     3,
+     1
+    ],
+    "mod": [
+     1,
+     1
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     27,
+     0
+    ]
+   },
+   "pay": [
+    31,
+    1001.0
+   ],
+   "rec": [
+    1,
+    87.0
+   ]
+  },
+  {
+   "p": "UnityHealth",
+   "s": "Orthopedics",
+   "m": "2026-04",
+   "n": 49,
+   "d": 6,
+   "dc": 11590.76,
+   "rw": 474.91,
+   "wo": 2,
+   "cat": {
+    "Coding / diagnosis": 2,
+    "Prior authorization": 3,
+    "Missing information": 1
+   },
+   "gaps": {
+    "pa": [
+     4,
+     3
+    ],
+    "el": [
+     0,
+     0
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     42,
+     2
+    ]
+   },
+   "pay": [
+    43,
+    1244.0
+   ],
+   "rec": [
+    4,
+    370.0
+   ]
+  },
+  {
+   "p": "UnityHealth",
+   "s": "Orthopedics",
+   "m": "2026-05",
+   "n": 54,
+   "d": 10,
+   "dc": 14835.01,
+   "rw": 898.8900000000001,
+   "wo": 5,
+   "cat": {
+    "Prior authorization": 3,
+    "Coding / modifier": 2,
+    "Medical necessity": 1,
+    "Eligibility": 3,
+    "Missing information": 1
+   },
+   "gaps": {
+    "pa": [
+     5,
+     3
+    ],
+    "el": [
+     5,
+     3
+    ],
+    "mod": [
+     4,
+     2
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     38,
+     1
+    ]
+   },
+   "pay": [
+    44,
+    1175.0
+   ],
+   "rec": [
+    5,
+    496.0
+   ]
+  },
+  {
+   "p": "UnityHealth",
+   "s": "Orthopedics",
+   "m": "2026-06",
+   "n": 42,
+   "d": 5,
+   "dc": 3603.2799999999997,
+   "rw": 369.26,
+   "wo": 4,
+   "cat": {
+    "Coding / diagnosis": 1,
+    "Missing information": 1,
+    "Eligibility": 1,
+    "Medical necessity": 2
+   },
+   "gaps": {
+    "pa": [
+     0,
+     0
+    ],
+    "el": [
+     1,
+     1
+    ],
+    "mod": [
+     0,
+     0
+    ],
+    "tf": [
+     0,
+     0
+    ],
+    "clean": [
+     38,
+     3
+    ]
+   },
+   "pay": [
+    37,
+    1085.0
+   ],
+   "rec": [
+    1,
+    97.0
+   ]
+  }
+ ],
+ "cat_preventable": {
+  "Eligibility": 1,
+  "Prior authorization": 1,
+  "Coding / modifier": 1,
+  "Missing information": 1,
+  "Timely filing": 1,
+  "Coding / diagnosis": 0,
+  "Medical necessity": 0,
+  "Duplicate": 0
+ }
+}
