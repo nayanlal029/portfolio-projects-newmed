@@ -49,3 +49,7 @@ python3 -m http.server 8803                                  # open http://local
 ## Honest limitations
 
 Synthetic data flatters models: the AUC demonstrates the method, not real-world accuracy. Single-line claims only. The PRD gate is client-side lead capture, not security. A production system needs the HIPAA controls described in the TRD, which a prototype does not implement.
+
+## Unlisted routes
+
+`/seatrace/` is an interview presentation (a Product Owner walkthrough of a real prior product), deliberately unlisted from the hub nav and marked noindex.
