@@ -232,9 +232,12 @@
   <div class="frame">
     <div class="kicker reveal">01 · Business goal &amp; problem</div>
     <h2 class="reveal">Farm to fork, with the trace broken in the middle.</h2>
+    <p class="lede reveal" style="margin-bottom:14px"><span class="client">Avanti Frozen Foods</span>, one of India's largest shrimp exporters, ran on a legacy ERP with no batch-level traceability. This is one real batch through the plant. Watch what happens to it.</p>
+    <div class="card reveal" style="padding:16px 18px">
+      <div class="flowscroll"><div id="flowchart"></div></div>
+    </div>
     <div class="cols">
       <div>
-        <p class="lede reveal"><span class="client">Avanti Frozen Foods</span>, one of India's largest shrimp exporters, ran on a legacy ERP with no batch-level traceability. When something goes wrong downstream, the system cannot answer: which farm, which pond, which day, which lots did it touch.</p>
         <ul class="pts reveal">
           <li><b>Recalls widen</b> because the source batch cannot be isolated.</li>
           <li><b>Global buyers demand compliance proof</b> the system cannot produce.</li>
@@ -250,7 +253,7 @@
           <span class="chip"><b class="num" data-to="5">0</b> epics in the MVP</span>
         </div>
       </div>
-      <div class="card reveal">
+      <div class="card reveal" style="display:none">
         <div class="diagram">
           <svg viewBox="0 0 380 300" width="100%">
             <defs><marker id="a1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#646f86"/></marker></defs>
@@ -562,6 +565,69 @@
   // const CLIENT_NAME = "a leading Indian shrimp exporter";
   const CLIENT_NAME = "Avanti Frozen Foods";
   document.querySelectorAll('.client').forEach(el => el.textContent = CLIENT_NAME);
+
+  // ---- farm-to-fork flow (edit STAGES/GRADES to change the diagram) ----
+  // Real figures from the batch-traceability flowchart, batch 2026201826.
+  const STAGES = [
+    {n:"Farm & pond",  sub:"booked from farmer",  kg:2000},
+    {n:"Purchase",     sub:"sampled at the pond", kg:1488.9},
+    {n:"Receiving",    sub:"batch ID created",    kg:1519.9, batch:true},
+    {n:"Beheading",    sub:"heads removed",       kg:1039.7},
+    {n:"Grading",      sub:"sorted into counts",  kg:1026.8, fan:true},
+    {n:"Peeling & cutting", sub:"2 batches merge",kg:1026.8, mix:"+2 batches"},
+    {n:"Soaking",      sub:"form factors applied",kg:1012},
+    {n:"IQF freeze",   sub:"3 more merge",        mix:"+3 batches"},
+    {n:"Packaging",    sub:"cartons built",       mix:"many parents"},
+    {n:"Export → fork",sub:"PO assigned"},
+  ];
+  const GRADES = ["16/20","26/30","31/35","31/40","41/50","51/60"];
+
+  function renderFlow(){
+    const host = document.getElementById('flowchart'); if(!host) return;
+    const nw=134, gap=20, m=16, N=STAGES.length;
+    const W = m*2 + N*nw + (N-1)*gap, H=340;
+    const x = i => m + i*(nw+gap);
+    let s = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Farm to fork batch flow">`;
+    s += `<defs><marker id="fa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#646f86"/></marker></defs>`;
+    STAGES.forEach((st,i)=>{
+      const X=x(i), cx=X+nw/2;
+      if(i<N-1) s+=`<line x1="${X+nw}" y1="92" x2="${x(i+1)-4}" y2="92" stroke="#646f86" stroke-width="1.6" marker-end="url(#fa)"/>`;
+      if(st.mix) s+=`<rect x="${cx-46}" y="34" width="92" height="20" rx="10" fill="#3a2a06" stroke="#eda100"/><text x="${cx}" y="48" text-anchor="middle" font-size="10.5" fill="#eda100" font-weight="700">${st.mix}</text>`;
+      s+=`<rect x="${X}" y="64" width="${nw}" height="56" rx="10" fill="#141823" stroke="${st.batch?'#0a66c2':st.fan?'#22c1a8':'#262c3a'}" stroke-width="${st.batch||st.fan?2:1}"/>`;
+      s+=`<text x="${cx}" y="88" text-anchor="middle" font-size="12.5" fill="#eef0f4" font-weight="700">${st.n}</text>`;
+      s+=`<text x="${cx}" y="106" text-anchor="middle" font-size="10.5" fill="#8b97ad">${st.sub}</text>`;
+      if(st.kg!=null){
+        const bw=Math.max(6, nw*(st.kg/2000));
+        s+=`<text x="${X}" y="140" font-size="11.5" fill="#d8dde6" font-weight="600">${st.kg.toLocaleString()} kg</text>`;
+        s+=`<rect x="${X}" y="146" width="${bw}" height="7" rx="3.5" fill="#22c1a8" opacity="0.85"/>`;
+        s+=`<rect x="${X+bw}" y="146" width="${nw-bw}" height="7" rx="3.5" fill="#262c3a"/>`;
+      } else {
+        s+=`<text x="${X}" y="140" font-size="10.5" fill="#8b97ad" font-style="italic">no single mass</text>`;
+      }
+    });
+    // batch id marker on Receiving
+    s+=`<text x="${x(2)+nw/2}" y="60" text-anchor="middle" font-size="10.5" fill="#aacef0" font-weight="700">BATCH 2026201826</text>`;
+    // grade fan under Grading
+    const fx=x(4)+nw/2, cw=62, cg=12, tot=GRADES.length*cw+(GRADES.length-1)*cg, sx=x(4)+5;
+    GRADES.forEach((g,j)=>{
+      const gx=sx+j*(cw+cg);
+      s+=`<line x1="${fx}" y1="156" x2="${gx+cw/2}" y2="196" stroke="#22c1a8" stroke-width="1.2" opacity="0.55"/>`;
+      s+=`<rect x="${gx}" y="196" width="${cw}" height="26" rx="6" fill="#0d1b2e" stroke="#1c3a5e"/>`;
+      s+=`<text x="${gx+cw/2}" y="213" text-anchor="middle" font-size="11" fill="#aacef0" font-weight="600">${g}</text>`;
+    });
+    s+=`<text x="${sx+tot/2}" y="242" text-anchor="middle" font-size="11" fill="#8b97ad">one lane becomes six count grades, then they get mixed again downstream</text>`;
+    // lineage ribbon
+    const ly=286;
+    s+=`<line x1="${x(2)+nw/2}" y1="${ly}" x2="${x(9)+nw/2}" y2="${ly}" stroke="#e34948" stroke-width="2" stroke-dasharray="6 5" opacity="0.8"/>`;
+    [[2,"1 parent"],[5,"3 parents"],[7,"6 parents"],[9,"6 in one carton"]].forEach(([i,lab])=>{
+      s+=`<circle cx="${x(i)+nw/2}" cy="${ly}" r="5" fill="#e34948"/>`;
+      s+=`<text x="${x(i)+nw/2}" y="${ly+20}" text-anchor="middle" font-size="10.5" fill="#e8b4b4" font-weight="600">${lab}</text>`;
+    });
+    s+=`<text x="${x(2)+nw/2}" y="${ly-12}" font-size="11" fill="#e34948" font-weight="700">lineage the legacy ERP could not keep →</text>`;
+    s+=`</svg>`;
+    host.innerHTML = s;
+  }
+  renderFlow();
 
   const slides = [...document.querySelectorAll('section.slide')];
   const railEl = document.getElementById('rail');
