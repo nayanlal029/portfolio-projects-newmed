@@ -34,6 +34,8 @@
   p.lede { color:var(--ink-300); font-size:clamp(14.5px,1.4vw,17px); max-width:860px; }
   .cols { display:grid; grid-template-columns:1.25fr 1fr; gap:34px; align-items:start; margin-top:26px; }
   @media (max-width:900px) { .cols { grid-template-columns:1fr; gap:20px; } }
+  .problem-cols { display:grid; grid-template-columns:1.15fr 0.85fr; gap:36px; align-items:start; margin-top:20px; }
+  @media (max-width:900px) { .problem-cols { grid-template-columns:1fr; gap:20px; } }
 
   .card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:20px 22px; transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease; }
   .card.hoverable:hover { transform:translateY(-4px); box-shadow:0 18px 44px rgba(0,0,0,0.4); border-color:rgba(122,178,230,0.4); }
@@ -90,7 +92,38 @@
   .agenda span { border:1px solid var(--border); border-radius:8px; padding:8px 16px; font-size:13px; color:var(--ink-300); transition:border-color .2s, color .2s, transform .2s; }
   .agenda span:hover { border-color:var(--accent); color:var(--ink-100); transform:translateY(-2px); }
   .agenda span b { color:var(--accent-300); font-family:"JetBrains Mono",monospace; font-size:11px; margin-right:7px; }
-  .scrollcue { position:absolute; left:50%; bottom:26px; transform:translateX(-50%); color:var(--ink-500); font-size:11px; letter-spacing:0.1em; text-transform:uppercase; display:flex; flex-direction:column; align-items:center; gap:6px; animation:bob 2.4s ease-in-out infinite; }
+  .back-home { position:absolute; top:24px; left:24px; z-index:50; display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:var(--ink-300); text-decoration:none; border:1px solid var(--border); padding:8px 14px; border-radius:8px; background:rgba(20,24,35,0.6); backdrop-filter:blur(6px); transition:all .2s; }
+  .back-home:hover { border-color:var(--accent); color:var(--accent-200); }
+  @media (max-width:899px) {
+    .back-home { top: 68px; left: 16px; }
+  }
+  .scrollcue-btn {
+    position: absolute;
+    left: 50%;
+    bottom: 26px;
+    transform: translateX(-50%);
+    background: rgba(20,24,35,0.7);
+    border: 1px solid var(--border);
+    color: var(--ink-300);
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: all 0.2s;
+    animation: bob 2.4s ease-in-out infinite;
+  }
+  .scrollcue-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent-200);
+    background: rgba(20,24,35,0.9);
+  }
   @keyframes bob { 0%,100%{transform:translate(-50%,0)} 50%{transform:translate(-50%,6px)} }
 
   .diagram { margin-top:22px; overflow-x:auto; }
@@ -242,6 +275,10 @@
 
 <!-- S0 TITLE -->
 <section class="slide" id="s0" data-rail="Start">
+  <a href="https://portfolio-projects-newmed.vercel.app/" class="back-home">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    <span>Home</span>
+  </a>
   <div class="aurora"><span class="b1"></span><span class="b2"></span></div>
   <div class="grid-bg"></div>
   <canvas id="nodes"></canvas>
@@ -252,12 +289,15 @@
     <div class="agenda reveal">
       <span><b>01</b>Business goal &amp; problem</span>
       <span><b>02</b>Team &amp; collaboration</span>
-      <span><b>03</b>Execution &amp; PO activities</span>
+      <span><b>03</b>Execution &amp; Product Owner activities</span>
       <span><b>04</b>Outcomes</span>
       <span><b>05</b>Lessons learned</span>
     </div>
   </div>
-  <div class="scrollcue">scroll or press →<span style="font-size:15px">↓</span></div>
+  <button class="scrollcue-btn reveal" onclick="go(1)" aria-label="Next section">
+    <span>Scroll or click to start</span>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+  </button>
 </section>
 
 <!-- S1 PROBLEM -->
@@ -265,62 +305,44 @@
   <div class="frame">
     <div class="kicker reveal">01 · Business goal &amp; problem</div>
     <h2 class="reveal">Farm to fork, with the trace broken in the middle.</h2>
-    <p class="lede reveal" style="margin-bottom:14px"><span class="client">Avanti Frozen Foods</span>, one of India's largest shrimp exporters, ran on a legacy ERP with no batch-level traceability. This is one real batch through the plant. Watch what happens to it.</p>
-    <div class="card reveal" style="padding:16px 18px">
-      <div class="flowscroll"><div id="flowchart"></div></div>
-      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
-        <button class="jr-open" id="openJourney">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-          Follow this batch: pond to fork
-        </button>
-        <span style="font-size:12.5px;color:var(--ink-400)">Eight stops, the real weights, and the moment the trace breaks.</span>
+    <p class="lede reveal" style="margin-bottom:20px"><span class="client">Avanti Frozen Foods</span>, one of India's largest shrimp exporters, ran on a legacy ERP with no batch-level traceability. This is one real batch through the plant. Watch what happens to it.</p>
+    
+    <div class="problem-cols">
+      <!-- Left Column: Flowchart Visual -->
+      <div class="card reveal" style="padding: 20px; overflow: hidden;">
+        <div id="flowchart" style="width: 100%; overflow: visible;"></div>
       </div>
-    </div>
-    <div class="cols">
-      <div>
-        <ul class="pts reveal">
-          <li><b>Recalls widen</b> because the source batch cannot be isolated.</li>
-          <li><b>Global buyers demand compliance proof</b> the system cannot produce.</li>
-          <li><b>Planning runs blind:</b> which purchase orders are at risk, which buyers matter this week.</li>
-        </ul>
-        <ul class="pts reveal">
-          <li><b>Who set the goal:</b> PatternLab's founders, with the exporter as joint-venture partner, committed to a traceability-first platform. Strategy was set above me; I owned making it real.</li>
-          <li><b>How it reached me:</b> as a vision and a partner commitment, not a backlog. My translation: founders' vision + SME and demo feedback + market and competitor analysis into a 5-epic MVP roadmap.</li>
-        </ul>
-        <div class="chips reveal">
-          <span class="chip"><b class="num" data-to="79">0</b> source tables</span>
-          <span class="chip"><b class="num" data-to="95" data-suffix="%">0</b> mass-balance target</span>
-          <span class="chip"><b class="num" data-to="5">0</b> epics in the MVP</span>
+      
+      <!-- Right Column: Interactive CTA, bullet points and KPI metrics -->
+      <div style="display: flex; flex-direction: column; gap: 24px;">
+        <div class="card reveal" style="padding: 20px; border-left: 3px solid #22c1a8;">
+          <button class="jr-open" id="openJourney" style="width: 100%; justify-content: center;">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            Follow this batch: pond to fork
+          </button>
+          <div style="font-size:13px;color:var(--ink-300);margin-top:12px;line-height:1.4;">Eight stops, the real weights, and the moment the trace breaks.</div>
         </div>
-      </div>
-      <div class="card reveal" style="display:none">
-        <div class="diagram">
-          <svg viewBox="0 0 380 300" width="100%">
-            <defs><marker id="a1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#646f86"/></marker></defs>
-            <g font-size="13" fill="#d8dde6">
-              <rect x="20" y="16" width="150" height="38" rx="9" fill="#141823" stroke="#262c3a"/><text x="95" y="40" text-anchor="middle">Farm &amp; pond</text>
-              <rect x="20" y="84" width="150" height="38" rx="9" fill="#141823" stroke="#262c3a"/><text x="95" y="108" text-anchor="middle">Procurement</text>
-              <rect x="20" y="152" width="150" height="38" rx="9" fill="#141823" stroke="#262c3a"/><text x="95" y="176" text-anchor="middle">Processing plant</text>
-              <rect x="20" y="220" width="150" height="38" rx="9" fill="#141823" stroke="#262c3a"/><text x="95" y="244" text-anchor="middle">Export &amp; buyer</text>
-              <line x1="95" y1="54" x2="95" y2="80" stroke="#646f86" stroke-width="1.6" marker-end="url(#a1)"/>
-              <line x1="95" y1="122" x2="95" y2="148" stroke="#646f86" stroke-width="1.6" marker-end="url(#a1)"/>
-              <line x1="95" y1="190" x2="95" y2="216" stroke="#e34948" stroke-width="2.4" stroke-dasharray="5 4"/>
-              <circle r="4.5" fill="#22c1a8">
-                <animateMotion path="M 95 20 L 95 148" dur="2.6s" repeatCount="indefinite" keyPoints="0;1;1" keyTimes="0;0.7;1" calcMode="linear"/>
-                <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.65;0.72" dur="2.6s" repeatCount="indefinite"/>
-              </circle>
-              <g transform="translate(200,158)">
-                <rect x="0" y="0" width="160" height="66" rx="9" fill="#2a1416" stroke="#e34948"/>
-                <text x="80" y="26" text-anchor="middle" fill="#ff9d9d" font-size="12" font-weight="700">LEGACY ERP</text>
-                <text x="80" y="46" text-anchor="middle" fill="#e8b4b4" font-size="11.5">trace stops here</text>
-                <animate attributeName="opacity" values="1;0.55;1" dur="2.6s" repeatCount="indefinite"/>
-              </g>
-              <text x="190" y="292" text-anchor="middle" fill="#8b97ad" font-size="11.5">batch identity must survive every hop</text>
-            </g>
-          </svg>
+
+        <div>
+          <ul class="pts reveal" style="margin-top: 0;">
+            <li><b>Recalls widen</b> because the source batch cannot be isolated.</li>
+            <li><b>Global buyers demand compliance proof</b> the system cannot produce.</li>
+            <li><b>Planning runs blind:</b> which purchase orders are at risk, which buyers matter this week.</li>
+          </ul>
+          <ul class="pts reveal" style="margin-top: 14px;">
+            <li><b>Who set the goal:</b> PatternLab's founders, with the exporter as joint-venture partner, committed to a traceability-first platform. Strategy was set above me; I owned making it real.</li>
+            <li><b>How it reached me:</b> as a vision and a partner commitment, not a backlog. My translation: founders' vision + SME and demo feedback + market and competitor analysis into a 5-epic MVP roadmap.</li>
+          </ul>
+          <div class="chips reveal" style="margin-top: 20px;">
+            <span class="chip"><b class="num" data-to="79">0</b> source tables</span>
+            <span class="chip"><b class="num" data-to="95" data-suffix="%">0</b> mass-balance target</span>
+            <span class="chip"><b class="num" data-to="5">0</b> epics in the MVP</span>
+          </div>
         </div>
       </div>
     </div>
+  </div>
+</section>
   </div>
 </section>
 
@@ -347,13 +369,14 @@
               <text x="230" y="194" text-anchor="middle" fill="#8b97ad" font-size="11.5">2 backend · 6 full-stack · data science · QA · design · client SMEs</text>
               <g font-size="11">
                 <rect x="10" y="232" width="136" height="52" rx="9" fill="#0d1b2e" stroke="#1c3a5e"/>
-                <text x="78" y="252" text-anchor="middle" fill="#aacef0" font-weight="700">with PM</text>
-                <text x="78" y="268" text-anchor="middle" fill="#8b97ad">roadmap down, evidence up</text>
+                <text x="78" y="248" text-anchor="middle" fill="#aacef0" font-weight="700">with PM</text>
+                <text x="78" y="263" text-anchor="middle" fill="#8b97ad">roadmap down,</text>
+                <text x="78" y="275" text-anchor="middle" fill="#8b97ad">evidence up</text>
                 <rect x="162" y="232" width="136" height="52" rx="9" fill="#0d1b2e" stroke="#1c3a5e"/>
-                <text x="230" y="252" text-anchor="middle" fill="#aacef0" font-weight="700">with UX</text>
+                <text x="230" y="250" text-anchor="middle" fill="#aacef0" font-weight="700">with UX</text>
                 <text x="230" y="268" text-anchor="middle" fill="#8b97ad">A/B loop + feasibility</text>
                 <rect x="314" y="232" width="136" height="52" rx="9" fill="#0d1b2e" stroke="#1c3a5e"/>
-                <text x="382" y="252" text-anchor="middle" fill="#aacef0" font-weight="700">with AI/ML</text>
+                <text x="382" y="250" text-anchor="middle" fill="#aacef0" font-weight="700">with AI/ML</text>
                 <text x="382" y="268" text-anchor="middle" fill="#8b97ad">no black box, guardrails</text>
               </g>
             </g>
@@ -372,116 +395,124 @@
   </div>
 </section>
 
-<!-- S3 EXECUTION: BACKLOG + INTERACTIVE WIDGET -->
+<!-- S3 EXECUTION: BACKLOG & STORIES -->
 <section class="slide" id="s3" data-rail="Execution">
   <div class="frame">
-    <div class="kicker reveal">03 · Execution: roadmap → backlog → acceptance criteria</div>
-    <h2 class="reveal">The translation, on paper.</h2>
+    <div class="kicker reveal">03 · Execution &amp; Product Owner (PO) Activities</div>
+    <h2 class="reveal">Translating Ideas into Action</h2>
     <div class="cols">
       <div>
-        <h3 class="reveal" style="color:var(--ink-300)">Five epics, from the actual roadmap</h3>
-        <div class="chips reveal" style="margin-top:10px">
-          <span class="chip">Impact KPI Top Insights</span><span class="chip">Building Base Forms</span>
-          <span class="chip">KG Reports</span><span class="chip">QC Integration</span><span class="chip">Exports / PO Module</span>
-        </div>
-        <div class="pyr reveal" style="margin-top:22px">
-          <div class="l1"><b>Epic</b> · Exports / PO module integration</div>
-          <div class="l2"><b>Story</b> · As a planner, I see confirmed POs ranked by urgency and buyer importance so I work the riskiest first</div>
-          <div class="l3"><b>Acceptance criteria</b> · filterable pool · default sort by priority score · top-2 reasons per row · freeze-plan snapshot with deltas</div>
-        </div>
-        <p class="reveal" style="margin-top:16px;font-size:13.5px;color:var(--ink-400)">Try the ranking logic I specified &rarr;</p>
+        <h3 class="reveal" style="color:var(--ink-300)">Backlog Creation &amp; Refinement</h3>
+        <ul class="pts reveal" style="margin-top: 10px; margin-bottom: 20px;">
+          <li><b>Refinement Cadence:</b> Backlog prioritised and refined via tight 11-day sprints, planning calls, daily stand-ups twice a day (10:00 AM &amp; 9:00 PM), core team meetings, and regular SME/client conversations.</li>
+          <li><b>Telemetry &amp; Prioritization:</b> Daily telemetry data reviewed in stand-ups to drive prioritization and unblock technical team issues.</li>
+        </ul>
+        
+        <h3 class="reveal" style="color:var(--ink-300)">Writing Stories with Clear Acceptance Criteria</h3>
+        <ul class="pts reveal" style="margin-top: 10px;">
+          <li><b>Mandatory Gates:</b> Product modifications, cataloging, documentation, and QA testing are strictly mandatory before pushing to dev, prod, or any environment.</li>
+          <li><b>PRD &amp; Specs:</b> Guided by a structured PRD with clearly defined specifications, containing direct references to the product vision, ideas, and functional prototypes.</li>
+        </ul>
       </div>
       <div class="pw reveal" id="pw">
-        <div class="t">Live · PO priority score = wt·Time + (1&minus;wt)·Buyer</div>
+        <div class="t">Live · Purchase Order (PO) priority score = wt·Time + (1&minus;wt)·Buyer</div>
         <div class="wt">
-          <span>Buyer</span>
+          <span>Buyer weight</span>
           <input type="range" id="wt" min="0" max="100" value="65">
-          <span>Time</span>
+          <span>Time weight</span>
         </div>
         <div class="wlbl" id="wlbl">Time 0.65 · Buyer 0.35</div>
         <div class="rows" id="pwrows"></div>
-        <div class="hintline">Drag the weight: the queue re-ranks live, and every row still shows its top-2 reasons. The weighting is a product decision, not a model's.</div>
+        <div class="hintline">Drag the weight slider: the Purchase Order (PO) queue re-ranks live. Showing top-2 reasons is a product requirement. The weighting is a product decision.</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- S4 EXECUTION: BLOCKER -->
+<!-- S4 EXECUTION: CADENCE & BLOCKERS -->
 <section class="slide" id="s4" data-rail="Execution">
   <div class="frame">
-    <div class="kicker reveal">03 · Execution: the blocker</div>
-    <h2 class="reveal">When the forms stalled.</h2>
-    <p class="lede reveal">Data entry forms were stuck between the client's backend data, too many stakeholders, and a team not yet using AI tooling well. I sequenced the work and standardized the workflow.</p>
-    <div class="pipe reveal" id="pipe">
-      <div class="step"><div class="box"><b>1 · WIREFRAME</b><span>agree what the form is before anyone codes</span></div><span class="arr">→</span></div>
-      <div class="step"><div class="box"><b>2 · SCHEMA</b><span>deliberated with and owned by backend</span></div><span class="arr">→</span></div>
-      <div class="step"><div class="box"><b>3 · API CONTRACT</b><span>mock payloads so frontend builds in parallel</span></div><span class="arr">→</span></div>
-      <div class="step"><div class="box"><b>4 · FULL-STACK BUILD</b><span>swap mocks for live endpoints</span></div><span class="arr">→</span></div>
-      <div class="step"><div class="box"><b>5 · REVIEW</b><span>final design + client SME sign-off</span></div></div>
-    </div>
-    <div class="cols" style="margin-top:24px">
-      <ul class="pts reveal" style="margin-top:0">
-        <li><b>Parallel lanes:</b> multiple forms ran through this pipeline simultaneously; status checked every day in standup.</li>
-        <li><b>Result:</b> the stall broke; the workflow became the team standard (PRD &rarr; TRD, schema-first).</li>
-      </ul>
-      <div class="card reveal" style="border-left:3px solid var(--warn)">
-        <h3>Data uncertainty as a product rule</h3>
-        <p style="font-size:14px;color:var(--ink-200);margin-top:8px">POs with no derivable promise date are marked <b>Data Incomplete</b> and visibly excluded from ranking. "% of ranked POs using assumptions" is an instrumented KPI. The mess is made visible and priced, never hidden inside a model.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- S5 EXECUTION: SCOPE -->
-<section class="slide" id="s5" data-rail="Execution">
-  <div class="frame">
-    <div class="kicker reveal">03 · Execution: scope decisions</div>
-    <h2 class="reveal">Prioritise. And buy.</h2>
-    <div class="decide">
-      <div class="card reveal">
-        <h3>Call 1 · MVP over factory intelligence</h3>
-        <dl>
-          <dt>The situation</dt><dd>I was leading two pods at once: SeaTrace and a factory-intelligence product, both drawing on the same people.</dd>
-          <dt>The call</dt><dd>I prioritised the SeaTrace MVP for delivery: the product with the committed partner and the clearest path to impact.</dd>
-          <dt>The result</dt><dd>The MVP shipped on plan; the factory-intelligence pod kept running in parallel (its engagement numbers appear in Outcomes).</dd>
-        </dl>
-      </div>
-      <div class="card reveal">
-        <h3>Call 2 · Buy the knowledge graph</h3>
-        <dl>
-          <dt>The situation</dt><dd>The traceability core needed a knowledge graph and querying engine: deep, specialist work.</dd>
-          <dt>The call</dt><dd>We deliberately did not build it. We partnered with a specialist (NeuralAxis) with deliverables contracted in the roadmap: batch and route representation, 95% mass balance, cycle times, cost per batch.</dd>
-          <dt>The result</dt><dd>Our pod stayed focused where our differentiation was: forms, dashboards, reports, and the planning logic on top of the graph.</dd>
-        </dl>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- S6 EXECUTION: AI-FIRST -->
-<section class="slide" id="s6" data-rail="Execution">
-  <div class="frame">
-    <div class="kicker reveal">03 · Execution: the delivery surprise</div>
-    <h2 class="reveal">Making the team AI-first was a delivery lever.</h2>
+    <div class="kicker reveal">03 · Execution &amp; Product Owner (PO) Activities</div>
+    <h2 class="reveal">Managing Sprint Cadence, Blockers &amp; Capacity</h2>
     <div class="cols">
       <div>
-        <ul class="pts reveal">
-          <li><b>What changed:</b> developers got vetted AI coding tools and LLM API access for backend forms and schema work.</li>
-          <li><b>What happened:</b> form delivery got measurably faster, and developer capability compounded sprint over sprint.</li>
-          <li><b>The PO lesson:</b> enabling the team with AI is part of the product owner's delivery toolkit, the same way I run my own workflow.</li>
+        <h3 class="reveal" style="color:var(--ink-300)">Sprint Cadence &amp; Rituals</h3>
+        <ul class="pts reveal" style="margin-top:10px; margin-bottom:20px;">
+          <li><b>Sprint Length:</b> Managed 11-day sprints, using daily planning calls and core team alignment meetings.</li>
+          <li><b>Touchpoints:</b> Daily stand-ups twice a day (10:00 AM and 9:00 PM), and regular client/SME feedback calls to ensure alignment.</li>
+        </ul>
+        
+        <h3 class="reveal" style="color:var(--ink-300)">Unblocking and Capacity Management</h3>
+        <ul class="pts reveal" style="margin-top:10px;">
+          <li><b>Engineering Blockers:</b> Unblocked the technical team expeditiously by connecting engineers directly with subject matter experts (SMEs) to bypass domain translation delays.</li>
+          <li><b>Capacity Adjustments:</b> Handled scope adjustments (increase or decrease) dynamically by hiring additional part-time members to meet timeline pressures.</li>
         </ul>
       </div>
-      <div class="card reveal">
-        <div style="display:flex;flex-direction:column;gap:14px">
-          <div>
-            <div style="font-size:12px;color:var(--ink-400);margin-bottom:6px">Before · manual workflow</div>
-            <div style="height:14px;border-radius:7px;background:var(--ink-800);width:100%"></div>
-          </div>
-          <div>
-            <div style="font-size:12px;color:var(--ink-400);margin-bottom:6px">After · AI-first workflow</div>
-            <div class="aibar" style="height:14px;border-radius:7px;background:linear-gradient(90deg,var(--accent),var(--accent-300));width:0%;transition:width 1s cubic-bezier(.2,.7,.2,1)" data-w="38%"></div>
-          </div>
-          <p style="font-size:12.5px;color:var(--ink-400)">Illustrative, not to scale: the point is the direction and the compounding, not a manufactured number.</p>
+      
+      <div class="card reveal" style="border-left:3px solid var(--warn); padding: 22px;">
+        <h3>Data Uncertainty as a Product Rule</h3>
+        <p style="font-size:14.5px;color:var(--ink-200);margin-top:10px">Purchase Orders (POs) with no derivable promise date are marked <b>Data Incomplete</b> and visibly excluded from the ranking queue.</p>
+        <p style="font-size:14.5px;color:var(--ink-200);margin-top:8px"><b>"% of ranked POs using assumptions"</b> is an instrumented product KPI. The data mess is exposed and priced, never hidden inside a model's prediction.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- S5 EXECUTION: AI/ML & DATA ISSUES -->
+<section class="slide" id="s5" data-rail="Execution">
+  <div class="frame">
+    <div class="kicker reveal">03 · Execution &amp; Product Owner (PO) Activities</div>
+    <h2 class="reveal">AI/ML: Handling Uncertainty, Spikes &amp; Data Issues</h2>
+    <div class="cols">
+      <div>
+        <h3 class="reveal" style="color:var(--ink-300)">Client Insights &amp; LLM Guardrails</h3>
+        <ul class="pts reveal" style="margin-top:10px; margin-bottom:20px;">
+          <li><b>Insights at Scale:</b> Designed and deployed LLM prompts in a parallel pod to generate client-facing insights at scale.</li>
+          <li><b>Evaluation and Evals:</b> Utilized an LLM-as-a-judge system, structured evaluation sets, and competing LLMs to verify that guardrails were respected and formatting/semantic criteria met.</li>
+        </ul>
+        
+        <h3 class="reveal" style="color:var(--ink-300)">Precision-Recall and Data Flow</h3>
+        <ul class="pts reveal" style="margin-top:10px;">
+          <li><b>Strategic Trade-offs:</b> The Precision-Recall trade-off was decided and locked at the very beginning of the product planning stage, rather than left as a post-implementation tuning task.</li>
+          <li><b>Cross-Collaboration:</b> Handled data flow and schema anomalies through close cross-collaboration between the backend and full-stack engineering teams to resolve pipeline blockages.</li>
+        </ul>
+      </div>
+      
+      <div class="card reveal" style="border-left:3px solid var(--accent); padding: 22px;">
+        <h3>The Precision-Recall Rule</h3>
+        <p style="font-size:14.5px;color:var(--ink-200);margin-top:10px">In automated batch verification, false positives (wrongly flagging a batch) delay shipping, while false negatives (missing a break) cause expensive recalls.</p>
+        <p style="font-size:14.5px;color:var(--ink-200);margin-top:8px">Establishing operational alignment early on allowed the engineering team to optimize parameters specifically for the business cost curve.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- S6 EXECUTION: SCOPE DECISIONS & DELIVERY SURPRISE -->
+<section class="slide" id="s6" data-rail="Execution">
+  <div class="frame">
+    <div class="kicker reveal">03 · Execution: scope decisions &amp; delivery surprise</div>
+    <h2 class="reveal">Scope Decisions &amp; The AI-First Delivery Surprise</h2>
+    <div class="cols">
+      <div class="card reveal" style="padding: 22px;">
+        <h3 style="color:var(--accent-300)">Scope Decisions: Prioritized &amp; Partnered</h3>
+        <dl style="margin-top: 10px;">
+          <dt style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-400); text-transform:uppercase;">Call 1 · MVP over factory intelligence</dt>
+          <dd style="font-size:14px; color:var(--ink-200); margin-bottom:12px; margin-top:3px;">Led two pods simultaneously. Prioritized the SeaTrace MVP for delivery to support the committed JV partner on plan.</dd>
+          
+          <dt style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-400); text-transform:uppercase;">Call 2 · Partnered for the knowledge graph core</dt>
+          <dd style="font-size:14px; color:var(--ink-200); margin-top:3px;">Partnered with a specialist vendor (NeuralAxis) for core graph querying deliverables, letting our team focus on forms, dashboard reports, and planning logic.</dd>
+        </dl>
+      </div>
+      
+      <div class="card reveal" style="padding: 22px;">
+        <h3 style="color:var(--aqua)">The Delivery Surprise: AI-First Velocity</h3>
+        <ul class="pts reveal" style="margin-top:10px;">
+          <li><b>Developer Empowerment:</b> Standardizing AI coding tools and LLM API access was a massive delivery lever that accelerated forms and database schema work.</li>
+          <li><b>Compounding Growth:</b> Team capacity compounded sprint-over-sprint, proving that developer enablement is a key Product Owner (PO) tool, not just an IT task.</li>
+        </ul>
+        <div style="margin-top: 18px; display:flex; flex-direction:column; gap:8px;">
+          <div style="font-size:11px;color:var(--ink-400)">Illustrative team velocity increase with AI tools:</div>
+          <div style="height:14px;border-radius:7px;background:linear-gradient(90deg,var(--accent),var(--accent-300));width:0%;transition:width 1s cubic-bezier(.2,.7,.2,1)" data-w="78%" class="aibar"></div>
         </div>
       </div>
     </div>
@@ -506,9 +537,9 @@
           <li>Impact KPI dashboard</li>
           <li>Batch-traceability core on the knowledge graph</li>
           <li>Data-entry forms</li>
-          <li>Compliance reports + PO module</li>
+          <li>Compliance reports + Purchase Order (PO) module</li>
         </ul>
-        <p style="font-size:12.5px;color:var(--ink-400);margin-top:10px">Product-health KPIs designed before launch: % days with a plan snapshot · % ranked POs using assumptions · booking accuracy · batch conformance.</p>
+        <p style="font-size:12.5px;color:var(--ink-400);margin-top:10px">Product-health KPIs designed before launch: % days with a plan snapshot · % ranked Purchase Orders (POs) using assumptions · booking accuracy · batch conformance.</p>
       </div>
       <div class="card parallel reveal">
         <h3>In parallel · the factory-intelligence pod I also led</h3>
@@ -641,47 +672,103 @@
 
   function renderFlow(){
     const host = document.getElementById('flowchart'); if(!host) return;
-    const nw=134, gap=20, m=16, N=STAGES.length;
-    const W = m*2 + N*nw + (N-1)*gap, H=340;
-    const x = i => m + i*(nw+gap);
-    let s = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Farm to fork batch flow">`;
-    s += `<defs><marker id="fa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#646f86"/></marker></defs>`;
+    const bw=150, bh=50, gap=36, m=24, N=STAGES.length;
+    // vertical step y-increment
+    const stepY = bh + gap; // 86px
+    const W = 520, H = m*2 + N*bh + (N-1)*gap; // 872px
+    const cx = 220; // horizontal center for boxes
+    const x = cx - bw/2; // 145
+    const y = i => m + i*stepY;
+    
+    let s = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="auto" role="img" aria-label="Farm to fork batch flow">`;
+    s += `<defs>
+      <marker id="fa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M0 0 L10 5 L0 10 z" fill="#646f86"/>
+      </marker>
+    </defs>`;
+    
+    // Main vertical connector line (glowing line down the middle)
+    s += `<line x1="${cx}" y1="${y(0)+bh}" x2="${cx}" y2="${y(N-1)}" stroke="#3a4255" stroke-width="2"/>`;
+    
     STAGES.forEach((st,i)=>{
-      const X=x(i), cx=X+nw/2;
-      if(i<N-1) s+=`<line x1="${X+nw}" y1="92" x2="${x(i+1)-4}" y2="92" stroke="#646f86" stroke-width="1.6" marker-end="url(#fa)"/>`;
-      if(st.mix) s+=`<rect x="${cx-46}" y="34" width="92" height="20" rx="10" fill="#3a2a06" stroke="#eda100"/><text x="${cx}" y="48" text-anchor="middle" font-size="10.5" fill="#eda100" font-weight="700">${st.mix}</text>`;
-      s+=`<rect x="${X}" y="64" width="${nw}" height="56" rx="10" fill="#141823" stroke="${st.batch?'#0a66c2':st.fan?'#22c1a8':'#262c3a'}" stroke-width="${st.batch||st.fan?2:1}"/>`;
-      s+=`<text x="${cx}" y="88" text-anchor="middle" font-size="12.5" fill="#eef0f4" font-weight="700">${st.n}</text>`;
-      s+=`<text x="${cx}" y="106" text-anchor="middle" font-size="10.5" fill="#8b97ad">${st.sub}</text>`;
+      const Y=y(i);
+      
+      // Connection arrow pointing down to next stage
+      if(i<N-1) {
+        s+=`<line x1="${cx}" y1="${Y+bh}" x2="${cx}" y2="${y(i+1)-4}" stroke="#646f86" stroke-width="1.6" marker-end="url(#fa)"/>`;
+      }
+      
+      // Mix badge (e.g. "+2 batches")
+      if(st.mix) {
+        s+=`<rect x="${cx-46}" y="${Y-18}" width="92" height="16" rx="8" fill="#3a2a06" stroke="#eda100"/>`;
+        s+=`<text x="${cx}" y="${Y-7}" text-anchor="middle" font-size="9.5" fill="#eda100" font-weight="700">${st.mix}</text>`;
+      }
+      
+      // Box
+      s+=`<rect x="${x}" y="${Y}" width="${bw}" height="${bh}" rx="10" fill="#141823" stroke="${st.batch?'#0a66c2':st.fan?'#22c1a8':'#262c3a'}" stroke-width="${st.batch||st.fan?2:1}"/>`;
+      s+=`<text x="${cx}" y="${Y+22}" text-anchor="middle" font-size="12" fill="#eef0f4" font-weight="700">${st.n}</text>`;
+      s+=`<text x="${cx}" y="${Y+38}" text-anchor="middle" font-size="10" fill="#8b97ad">${st.sub}</text>`;
+      
+      // Weight bar on the right side
+      const bx = cx + bw/2 + 20; // 315
       if(st.kg!=null){
-        const bw=Math.max(6, nw*(st.kg/2000));
-        s+=`<text x="${X}" y="140" font-size="11.5" fill="#d8dde6" font-weight="600">${st.kg.toLocaleString()} kg</text>`;
-        s+=`<rect x="${X}" y="146" width="${bw}" height="7" rx="3.5" fill="#22c1a8" opacity="0.85"/>`;
-        s+=`<rect x="${X+bw}" y="146" width="${nw-bw}" height="7" rx="3.5" fill="#262c3a"/>`;
+        const barW = Math.max(10, 100 * (st.kg/2000));
+        s+=`<text x="${bx}" y="${Y+20}" font-size="11" fill="#d8dde6" font-weight="600">${st.kg.toLocaleString()} kg</text>`;
+        s+=`<rect x="${bx}" y="${Y+26}" width="${barW}" height="6" rx="3" fill="#22c1a8" opacity="0.85"/>`;
+        s+=`<rect x="${bx+barW}" y="${Y+26}" width="${100-barW}" height="6" rx="3" fill="#262c3a"/>`;
       } else {
-        s+=`<text x="${X}" y="140" font-size="10.5" fill="#8b97ad" font-style="italic">no single mass</text>`;
+        s+=`<text x="${bx}" y="${Y+24}" font-size="10" fill="#8b97ad" font-style="italic">no single mass</text>`;
       }
     });
-    // batch id marker on Receiving
-    s+=`<text x="${x(2)+nw/2}" y="60" text-anchor="middle" font-size="10.5" fill="#aacef0" font-weight="700">BATCH 2026201826</text>`;
-    // grade fan under Grading
-    const fx=x(4)+nw/2, cw=62, cg=12, tot=GRADES.length*cw+(GRADES.length-1)*cg, sx=x(4)+5;
+    
+    // Batch ID marker on Receiving (Stage 2)
+    s+=`<text x="${cx}" y="${y(2)-6}" text-anchor="middle" font-size="9" fill="#aacef0" font-weight="700">BATCH 2026201826</text>`;
+    
+    // Grade fan under Grading (Stage 4)
+    // We will render it as a compact 3x2 grid of count grades on the right
+    const fY = y(4) + bh/2; // vertical center of Grading
+    const fx = cx + bw/2; // 295
+    const gx = cx + bw/2 + 20; // 315
+    const cw = 54, ch = 20, cgX = 8, cgY = 6;
     GRADES.forEach((g,j)=>{
-      const gx=sx+j*(cw+cg);
-      s+=`<line x1="${fx}" y1="156" x2="${gx+cw/2}" y2="196" stroke="#22c1a8" stroke-width="1.2" opacity="0.55"/>`;
-      s+=`<rect x="${gx}" y="196" width="${cw}" height="26" rx="6" fill="#0d1b2e" stroke="#1c3a5e"/>`;
-      s+=`<text x="${gx+cw/2}" y="213" text-anchor="middle" font-size="11" fill="#aacef0" font-weight="600">${g}</text>`;
+      const row = Math.floor(j / 3);
+      const col = j % 3;
+      const rx = gx + col * (cw + cgX);
+      const ry = y(4) + row * (ch + cgY);
+      
+      // Connect Grading box to these cards
+      if (col === 0) {
+        s+=`<line x1="${fx}" y1="${fY}" x2="${rx}" y2="${ry + ch/2}" stroke="#22c1a8" stroke-width="1" opacity="0.5"/>`;
+      }
+      
+      s+=`<rect x="${rx}" y="${ry}" width="${cw}" height="${ch}" rx="4" fill="#0d1b2e" stroke="#1c3a5e"/>`;
+      s+=`<text x="${rx+cw/2}" y="${ry+14}" text-anchor="middle" font-size="9.5" fill="#aacef0" font-weight="600">${g}</text>`;
     });
-    s+=`<text x="${sx+tot/2}" y="242" text-anchor="middle" font-size="11" fill="#8b97ad">one lane becomes six count grades, then they get mixed again downstream</text>`;
-    // lineage ribbon
-    const ly=286;
-    s+=`<line x1="${x(2)+nw/2}" y1="${ly}" x2="${x(9)+nw/2}" y2="${ly}" stroke="#e34948" stroke-width="2" stroke-dasharray="6 5" opacity="0.8"/>`;
-    [[2,"1 parent"],[5,"3 parents"],[7,"6 parents"],[9,"6 in one carton"]].forEach(([i,lab])=>{
-      s+=`<circle cx="${x(i)+nw/2}" cy="${ly}" r="5" fill="#e34948"/>`;
-      s+=`<text x="${x(i)+nw/2}" y="${ly+20}" text-anchor="middle" font-size="10.5" fill="#e8b4b4" font-weight="600">${lab}</text>`;
+    // Description text under Grading fan
+    s+=`<text x="${gx}" y="${y(4)+52}" font-size="9.5" fill="#8b97ad" width="180">one lane &rarr; six count grades</text>`;
+    
+    // Lineage ribbon on the left side of the vertical line
+    const lx = 48; // x-position of lineage ribbon
+    const lyStart = y(2) + bh/2; // Receiving
+    const lyEnd = y(9) + bh/2; // Export
+    s+=`<line x1="${lx}" y1="${lyStart}" x2="${lx}" y2="${lyEnd}" stroke="#e34948" stroke-width="1.8" stroke-dasharray="5 4" opacity="0.8"/>`;
+    
+    const lineageNodes = [
+      [2, "1 parent"],
+      [5, "3 parents"],
+      [7, "6 parents"],
+      [9, "6 in one carton"]
+    ];
+    lineageNodes.forEach(([i, lab])=>{
+      const ly = y(i) + bh/2;
+      s+=`<circle cx="${lx}" cy="${ly}" r="4" fill="#e34948"/>`;
+      s+=`<text x="${lx - 8}" y="${ly + 4}" text-anchor="end" font-size="9.5" fill="#e8b4b4" font-weight="600">${lab}</text>`;
+      // Connect line to the box
+      s+=`<line x1="${lx}" y1="${ly}" x2="${x}" y2="${ly}" stroke="#e34948" stroke-width="1" stroke-dasharray="3 3" opacity="0.4"/>`;
     });
-    s+=`<text x="${x(2)+nw/2}" y="${ly-12}" font-size="11" fill="#e34948" font-weight="700">lineage the legacy ERP could not keep →</text>`;
-    s+=`</svg>`;
+    s+=`<text x="${lx}" y="${lyStart-12}" font-size="9.5" fill="#e34948" font-weight="700" text-anchor="start">legacy ERP broke lineage</text>`;
+    
+    s += `</svg>`;
     host.innerHTML = s;
   }
   renderFlow();
