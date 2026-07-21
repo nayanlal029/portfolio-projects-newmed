@@ -266,6 +266,13 @@
   .jr-close:hover { border-color:#e34948; color:#fff; }
   .jr-stage { flex:1; display:grid; grid-template-columns:1.2fr .8fr; gap:30px; align-items:center; padding:18px 42px; overflow:auto; }
   @media (max-width:940px) { .jr-stage { grid-template-columns:1fr; padding:14px 18px; gap:14px; } }
+  @media (max-width: 640px) {
+    .jr-stop b { display: none; }
+    .jr-top { padding: 12px 16px; }
+    .jr-stage { padding: 12px 16px; }
+    .jr-nav { padding-bottom: 12px; }
+    .jr-close { padding: 5px 10px; font-size: 12px; }
+  }
   .jr-art svg { width:100%; height:auto; max-height:56vh; display:block; }
   .jr-copy .k { font-family:"JetBrains Mono",monospace; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:#22c1a8; }
   .jr-copy h3 { font-size:clamp(21px,2.8vw,32px); font-weight:800; letter-spacing:-.5px; margin:9px 0 10px; }
@@ -314,7 +321,7 @@
 
 <!-- S0 TITLE -->
 <section class="slide" id="s0" data-rail="Start">
-  <a href="https://portfolio-projects-newmed.vercel.app/" class="back-home">
+  <a href="../" class="back-home">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
     <span>Home</span>
   </a>

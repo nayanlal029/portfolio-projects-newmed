@@ -18,6 +18,21 @@
   body { background:var(--plane); color:var(--ink); font-size:15px; line-height:1.55; }
   header { background:linear-gradient(120deg,#3b2d85,#4a3aa7 55%,#5a49c4); color:#fff; padding:24px 32px; }
   .shell { max-width:1460px; margin:0 auto; }
+  .back-home-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 555;
+    color: rgba(255, 255, 255, 0.75);
+    text-decoration: none;
+    margin-bottom: 14px;
+    transition: color 0.2s;
+    outline: none;
+  }
+  .back-home-btn:hover {
+    color: #fff;
+  }
   .brand { display:flex; align-items:center; gap:12px; }
   .brand .mark { width:38px; height:38px; border-radius:9px; background:#fff; display:grid; place-items:center; }
   .brand h1 { font-size:20px; font-weight:650; }
@@ -79,6 +94,10 @@
 <body>
 <header>
   <div class="shell">
+    <a href="../" class="back-home-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      <span>Home</span>
+    </a>
     <div class="brand">
       <div class="mark"><svg width="22" height="22" viewBox="0 0 24 24" aria-label="NewMed"><rect x="9.2" y="2.5" width="5.6" height="19" rx="2.4" fill="#4a3aa7"/><rect x="2.5" y="9.2" width="19" height="5.6" rx="2.4" fill="#4a3aa7"/><rect x="9.2" y="9.2" width="5.6" height="5.6" fill="#6a59d4"/></svg></div>
       <h1>NewMed <span>· Practice Ops Bottleneck Analyzer</span></h1>

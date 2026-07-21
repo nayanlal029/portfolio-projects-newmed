@@ -54,9 +54,21 @@
   .toggle:hover { border-color:var(--accent); color:var(--accent); }
   .menu-btn { display:none; background:none; border:0; color:inherit; cursor:pointer; padding:6px; }
   @media (max-width:820px){ .nav-links { display:none; } .menu-btn { display:block; } }
-  .mobile-menu { display:none; background:var(--bg); border-top:1px solid var(--card-border); padding:14px 24px; }
+  .mobile-menu {
+    display: none;
+    background: rgba(10, 13, 20, 0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--card-border);
+    padding: 16px 24px;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 100;
+  }
   .mobile-menu.open { display:block; }
-  .mobile-menu a { display:block; padding:9px 0; color:var(--ink-200); font-size:15px; }
+  .mobile-menu a { display:block; padding:10px 0; color:var(--ink-200); font-size:15px; font-weight: 550; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+  .mobile-menu a:last-child { border-bottom: none; }
 
   /* hero */
   .hero { position:relative; min-height:100vh; display:flex; align-items:center; padding:112px 0 80px; overflow:hidden; }
