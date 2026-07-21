@@ -181,6 +181,39 @@
   footer.app { padding:30px 24px 60px; color:var(--ink-500); font-size:12.5px; text-align:center; }
   footer.app a { color:var(--accent-300); }
 
+  /* ---- batch journey overlay (pond to fork) ---- */
+  .flowscroll { overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:6px; }
+  .jr-open { display:inline-flex; align-items:center; gap:9px; background:linear-gradient(90deg,var(--accent),#1a9e8a); color:#fff; border:0; border-radius:10px; padding:12px 20px; font-weight:700; font-size:14.5px; cursor:pointer; font-family:inherit; transition:transform .2s, box-shadow .2s; }
+  .jr-open:hover { transform:translateY(-2px); box-shadow:0 12px 32px rgba(10,102,194,.38); }
+  .jr { position:fixed; inset:0; z-index:200; background:radial-gradient(1100px 640px at 50% -5%, #14263f, #070a11 70%); display:none; flex-direction:column; }
+  .jr.on { display:flex; }
+  .jr-top { display:flex; align-items:center; gap:14px; padding:16px 24px; border-bottom:1px solid rgba(255,255,255,.08); }
+  .jr-top .t { font-weight:800; font-size:15px; }
+  .jr-top .t span { color:var(--ink-400); font-weight:500; }
+  .jr-close { margin-left:auto; background:none; border:1px solid var(--border); color:var(--ink-300); border-radius:8px; padding:7px 14px; cursor:pointer; font-family:inherit; font-size:13px; }
+  .jr-close:hover { border-color:#e34948; color:#fff; }
+  .jr-stage { flex:1; display:grid; grid-template-columns:1.2fr .8fr; gap:30px; align-items:center; padding:18px 42px; overflow:auto; }
+  @media (max-width:940px) { .jr-stage { grid-template-columns:1fr; padding:14px 18px; gap:14px; } }
+  .jr-art svg { width:100%; height:auto; max-height:56vh; display:block; }
+  .jr-copy .k { font-family:"JetBrains Mono",monospace; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:#22c1a8; }
+  .jr-copy h3 { font-size:clamp(21px,2.8vw,32px); font-weight:800; letter-spacing:-.5px; margin:9px 0 10px; }
+  .jr-copy p { color:var(--ink-300); font-size:15px; max-width:44ch; }
+  .jr-kg { display:inline-flex; align-items:baseline; gap:9px; margin-top:16px; background:#101725; border:1px solid var(--border); border-radius:10px; padding:10px 16px; }
+  .jr-kg b { font-size:24px; font-weight:800; color:#22c1a8; font-variant-numeric:tabular-nums; letter-spacing:-.5px; }
+  .jr-kg span { font-size:12px; color:var(--ink-400); }
+  .jr-rail { display:flex; padding:16px 24px 6px; border-top:1px solid rgba(255,255,255,.08); }
+  .jr-stop { flex:1; text-align:center; cursor:pointer; padding-top:15px; position:relative; }
+  .jr-stop i { position:absolute; top:0; left:50%; margin-left:-5.5px; width:11px; height:11px; border-radius:50%; background:#2b3648; transition:background .3s, box-shadow .3s; }
+  .jr-stop.done i { background:var(--accent); }
+  .jr-stop.on i { background:#22c1a8; box-shadow:0 0 0 5px rgba(34,193,168,.22); }
+  .jr-stop b { display:block; font-size:10.5px; color:var(--ink-500); font-weight:600; }
+  .jr-stop.on b { color:#fff; }
+  .jr-nav { display:flex; gap:10px; justify-content:center; padding:8px 0 18px; }
+  .jr-nav button { background:#141c2b; border:1px solid var(--border); color:var(--ink-200); border-radius:9px; padding:9px 20px; font-weight:650; cursor:pointer; font-family:inherit; font-size:13.5px; }
+  .jr-nav button:hover { border-color:#22c1a8; color:#fff; }
+  .jr-nav button[disabled] { opacity:.35; cursor:default; }
+  @media print { .jr, .jr-open { display:none !important; } }
+
   @media (prefers-reduced-motion: reduce) {
     .reveal { opacity:1 !important; transform:none !important; transition:none !important; }
     #s0 .aurora span, .scrollcue { animation:none !important; }
@@ -235,6 +268,13 @@
     <p class="lede reveal" style="margin-bottom:14px"><span class="client">Avanti Frozen Foods</span>, one of India's largest shrimp exporters, ran on a legacy ERP with no batch-level traceability. This is one real batch through the plant. Watch what happens to it.</p>
     <div class="card reveal" style="padding:16px 18px">
       <div class="flowscroll"><div id="flowchart"></div></div>
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+        <button class="jr-open" id="openJourney">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          Follow this batch: pond to fork
+        </button>
+        <span style="font-size:12.5px;color:var(--ink-400)">Eight stops, the real weights, and the moment the trace breaks.</span>
+      </div>
     </div>
     <div class="cols">
       <div>
@@ -557,6 +597,23 @@
 </main>
 <footer class="app">Prepared for the ModMed panel · SeaTrace is a PatternLab.AI product; visuals are abstracted recreations, no proprietary UI shown.</footer>
 
+<!-- immersive batch journey (opened from slide 1) -->
+<div class="jr" id="journey" role="dialog" aria-modal="true" aria-label="Batch journey, pond to fork">
+  <div class="jr-top">
+    <div class="t">Batch 2026201826 <span>· one real batch, pond to fork</span></div>
+    <button class="jr-close" id="jrClose">Close ✕</button>
+  </div>
+  <div class="jr-stage">
+    <div class="jr-art" id="jrArt"></div>
+    <div class="jr-copy" id="jrCopy"></div>
+  </div>
+  <div class="jr-rail" id="jrRail"></div>
+  <div class="jr-nav">
+    <button id="jrPrev">← Back</button>
+    <button id="jrNext">Next →</button>
+  </div>
+</div>
+
 <script>
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -628,6 +685,203 @@
     host.innerHTML = s;
   }
   renderFlow();
+
+  // ================= immersive batch journey: pond to fork =================
+  // A shrimp illustration travels the real supply chain. Scenes are plain SVG,
+  // so they can be edited by hand. Numbers are batch 2026201826's real weights.
+  function shrimp(x, y, s, rot, c1, c2) {
+    c1 = c1 || '#ff9d7a'; c2 = c2 || '#d9613a';
+    return `<g transform="translate(${x},${y}) rotate(${rot || 0}) scale(${s || 1})">
+      <path d="M-46,6 C-30,-14 -4,-22 16,-12 C34,-3 36,16 22,26 C10,35 -10,34 -22,25" fill="none" stroke="${c1}" stroke-width="17" stroke-linecap="round"/>
+      <path d="M-44,4 L-66,-9 L-60,7 L-72,17 L-50,18 Z" fill="${c2}"/>
+      <path d="M-24,-3 L-19,11 M-11,-12 L-6,3 M2,-16 L6,-1 M14,-13 L17,2" stroke="${c2}" stroke-width="2.6" stroke-linecap="round" opacity=".85"/>
+      <circle cx="23" cy="-7" r="3.4" fill="#2a1410"/>
+      <path d="M29,-11 C41,-20 51,-19 58,-13 M30,-6 C43,-6 52,-1 59,6" stroke="${c2}" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M-7,27 L-10,37 M5,30 L4,40 M16,26 L20,35" stroke="${c2}" stroke-width="2.4" stroke-linecap="round"/>
+    </g>`;
+  }
+  const CRATE = (x,y,s) => `<g transform="translate(${x},${y}) scale(${s||1})">
+      <rect x="-38" y="-26" width="76" height="52" rx="7" fill="#1d2a3d" stroke="#3a5570" stroke-width="2.5"/>
+      <path d="M-38,-8 H38 M-38,8 H38" stroke="#3a5570" stroke-width="2"/>
+      ${shrimp(0,-17,.28,-8)}${shrimp(-14,1,.26,6)}${shrimp(16,3,.26,-4)}</g>`;
+
+  const SCENES = [
+    { key:'Pond', title:'It starts in a pond', kg:'2,000 kg', kgl:'booked from the farmer',
+      cap:'A farmer books 2,000 kg. At this point the shrimp has no identity in any system: no batch, no record, just a pond and a promise.',
+      art:`<defs><linearGradient id="pw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d5570"/><stop offset="1" stop-color="#0c2231"/></linearGradient></defs>
+        <ellipse cx="360" cy="250" rx="305" ry="115" fill="url(#pw)"/>
+        <ellipse cx="360" cy="250" rx="305" ry="115" fill="none" stroke="#2f7d9b" stroke-width="2.5" opacity=".55"/>
+        <path d="M110,215 Q170,203 230,215 T350,215 T470,215 T600,215" stroke="#3f8fae" stroke-width="3" fill="none" opacity=".6"/>
+        <path d="M140,290 Q205,278 270,290 T400,290 T530,290" stroke="#3f8fae" stroke-width="2.5" fill="none" opacity=".4"/>
+        ${[[95,225],[120,235],[625,228],[600,240]].map(([x,y])=>`<path d="M${x},${y} C${x-8},${y-60} ${x+8},${y-90} ${x},${y-118}" stroke="#2e6b52" stroke-width="5" fill="none" stroke-linecap="round"/><ellipse cx="${x}" cy="${y-124}" rx="7" ry="17" fill="#3d8b68"/>`).join('')}
+        ${shrimp(250,235,1.05,-10)}${shrimp(415,275,.8,8)}${shrimp(500,215,.62,-16)}
+        <text x="360" y="360" text-anchor="middle" font-size="13" fill="#7fa8bd">farmer's pond · no batch identity yet</text>` },
+
+    { key:'Truck', title:'It travels to the plant', kg:'1,488.9 kg', kgl:'purchased after sampling at the pond',
+      cap:'Sampled, weighed and purchased at the pond, then trucked to the processing plant. The first number that will ever be reconciled is written here.',
+      art:`<path d="M40,300 H680" stroke="#2b3a4d" stroke-width="4" stroke-dasharray="26 18"/>
+        <ellipse cx="105" cy="278" rx="62" ry="20" fill="#123043" stroke="#2f7d9b" stroke-width="2"/>
+        <text x="105" y="316" text-anchor="middle" font-size="12" fill="#7fa8bd">pond</text>
+        <rect x="560" y="196" width="112" height="84" rx="6" fill="#1b2636" stroke="#3a5570" stroke-width="2.5"/>
+        <path d="M560,196 L616,160 L672,196" fill="#233246" stroke="#3a5570" stroke-width="2.5"/>
+        <rect x="596" y="232" width="30" height="48" fill="#0e1522" stroke="#3a5570" stroke-width="2"/>
+        <text x="616" y="316" text-anchor="middle" font-size="12" fill="#7fa8bd">plant</text>
+        <g transform="translate(300,214)">
+          <rect x="-108" y="-56" width="150" height="86" rx="8" fill="#1d2a3d" stroke="#4a6b8a" stroke-width="3"/>
+          <path d="M-108,-24 H42 M-108,2 H42" stroke="#3a5570" stroke-width="2"/>
+          <path d="M42,-36 H92 L118,-4 V30 H42 Z" fill="#22334a" stroke="#4a6b8a" stroke-width="3"/>
+          <rect x="60" y="-28" width="34" height="26" rx="4" fill="#0e1522" stroke="#4a6b8a" stroke-width="2"/>
+          <circle cx="-62" cy="42" r="19" fill="#0d131f" stroke="#5d7d9c" stroke-width="4"/>
+          <circle cx="8" cy="42" r="19" fill="#0d131f" stroke="#5d7d9c" stroke-width="4"/>
+          <circle cx="92" cy="42" r="19" fill="#0d131f" stroke="#5d7d9c" stroke-width="4"/>
+          ${shrimp(-34,-22,.4,-6)}
+          <path d="M-150,-20 H-118 M-160,2 H-124 M-146,24 H-120" stroke="#22c1a8" stroke-width="3" stroke-linecap="round" opacity=".7"/>
+        </g>` },
+
+    { key:'Receiving', title:'It is weighed, and it becomes a batch', kg:'1,519.9 kg', kgl:'recorded at the receiving dock',
+      cap:'On the dock it is weighed and quality tested, and a batch ID is finally created: 2026201826. Note the weight went UP against the purchase figure. Reconciling that gap between stages is a real part of the job.',
+      art:`<rect x="60" y="70" width="600" height="210" rx="10" fill="#111a27" stroke="#2b3a4d" stroke-width="2"/>
+        <path d="M60,120 H660" stroke="#2b3a4d" stroke-width="2"/>
+        <text x="86" y="103" font-size="13" fill="#7fa8bd">RECEIVING DOCK</text>
+        <g transform="translate(215,215)">
+          <rect x="-84" y="18" width="168" height="16" rx="5" fill="#22334a" stroke="#4a6b8a" stroke-width="2.5"/>
+          <rect x="-58" y="-4" width="116" height="24" rx="4" fill="#1a2536" stroke="#4a6b8a" stroke-width="2"/>
+          ${CRATE(0,-34,.95)}
+          <rect x="-52" y="44" width="104" height="34" rx="6" fill="#07131a" stroke="#22c1a8" stroke-width="2"/>
+          <text x="0" y="67" text-anchor="middle" font-size="17" fill="#22c1a8" font-weight="700" font-family="monospace">1519.9</text>
+        </g>
+        <g transform="translate(500,200)">
+          <rect x="-52" y="-64" width="104" height="132" rx="8" fill="#16202f" stroke="#4a6b8a" stroke-width="2.5"/>
+          <rect x="-24" y="-76" width="48" height="18" rx="5" fill="#22334a" stroke="#4a6b8a" stroke-width="2"/>
+          ${[-34,-8,18,44].map(y=>`<path d="M-34,${y} h30" stroke="#3a5570" stroke-width="3" stroke-linecap="round"/><path d="M8,${y-5} l7,8 l14,-16" stroke="#22c1a8" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}
+          <text x="0" y="92" text-anchor="middle" font-size="12" fill="#7fa8bd">antibiotic &amp; QC tests</text>
+        </g>
+        <text x="215" y="330" text-anchor="middle" font-size="13" fill="#aacef0" font-weight="700">BATCH 2026201826 CREATED</text>` },
+
+    { key:'Grading', title:'One batch becomes six', kg:'1,026.8 kg', kgl:'after beheading, sorted by count',
+      cap:'The grading machine sorts by count: how many shrimp make a pound. Bigger shrimp on the left, smaller on the right. One arriving lane leaves as six different grades, each with its own price and its own destination.',
+      art:`<g transform="translate(175,120)">
+          <rect x="-62" y="-44" width="150" height="88" rx="9" fill="#1d2a3d" stroke="#4a6b8a" stroke-width="3"/>
+          <text x="13" y="-4" text-anchor="middle" font-size="13" fill="#cfe0ee" font-weight="700">GRADER</text>
+          <text x="13" y="18" text-anchor="middle" font-size="11" fill="#7fa8bd">count sorter</text>
+          ${shrimp(-118,0,.5,0)}
+        </g>
+        ${[['16/20',1.0],['26/30',.86],['31/35',.74],['31/40',.64],['41/50',.54],['51/60',.44]].map((g,i)=>{
+          const x=118+i*96, y=290;
+          return `<path d="M263,130 C${x},172 ${x},200 ${x},${y-52}" stroke="#22c1a8" stroke-width="2" fill="none" opacity=".45"/>
+            <rect x="${x-40}" y="${y-46}" width="80" height="76" rx="8" fill="#101a26" stroke="#2b3a4d" stroke-width="2"/>
+            ${shrimp(x,y-14,g[1]*.42,-6)}
+            <text x="${x}" y="${y+46}" text-anchor="middle" font-size="12.5" fill="#aacef0" font-weight="700" font-family="monospace">${g[0]}</text>`;
+        }).join('')}
+        <text x="360" y="372" text-anchor="middle" font-size="12.5" fill="#7fa8bd">bigger shrimp ← count → smaller shrimp</text>` },
+
+    { key:'Processing', title:'Some is cooked, some is peeled', kg:'1,012 kg', kgl:'logged into soaking',
+      cap:'Now it splits by what the buyer ordered. Some grades are cooked, others are peeled and cut into forms like PD, PDTO or EZPL. The shrimp stops being one thing and becomes several products.',
+      art:`<g transform="translate(190,200)">
+          <ellipse cx="0" cy="40" rx="96" ry="18" fill="#0e1522"/>
+          <path d="M-84,-30 H84 L70,54 H-70 Z" fill="#1d2a3d" stroke="#5d7d9c" stroke-width="3"/>
+          <rect x="-96" y="-42" width="192" height="16" rx="7" fill="#22334a" stroke="#5d7d9c" stroke-width="2.5"/>
+          <path d="M-40,-58 C-52,-76 -28,-84 -40,-104 M0,-62 C-12,-80 12,-90 0,-110 M40,-58 C28,-76 52,-84 40,-104" stroke="#7fa8bd" stroke-width="3" fill="none" stroke-linecap="round" opacity=".65"/>
+          ${shrimp(-26,6,.5,10,'#ff7a5c','#c4432a')}${shrimp(28,18,.44,-8,'#ff7a5c','#c4432a')}
+          <text x="0" y="86" text-anchor="middle" font-size="13" fill="#ff9d7a" font-weight="700">COOKED</text>
+        </g>
+        <g transform="translate(520,205)">
+          <rect x="-104" y="10" width="208" height="20" rx="7" fill="#2a3446" stroke="#5d7d9c" stroke-width="2.5"/>
+          <path d="M-70,-46 L-6,-46 L-6,-38 L-70,-38 Z" fill="#7f8fa5"/>
+          <path d="M-6,-52 L34,-30 L-6,-32 Z" fill="#c3cfdd"/>
+          ${shrimp(-40,-4,.46,4)}${shrimp(30,0,.44,-6)}
+          <text x="0" y="62" text-anchor="middle" font-size="13" fill="#aacef0" font-weight="700">PEELED &amp; CUT</text>
+          <text x="0" y="84" text-anchor="middle" font-size="11.5" fill="#7fa8bd">PD · PDTO · EZPL · PVPD</text>
+        </g>` },
+
+    { key:'Packing', title:'Batches get mixed into cartons', kg:'many parents', kgl:'per finished carton',
+      cap:'To fill an order, product from several batches is packed together. This is the moment traceability is won or lost: one carton now physically contains shrimp from multiple ponds and multiple days.',
+      art:`${[[170,230,1],[330,230,1],[490,230,1]].map(([x,y])=>`<g transform="translate(${x},${y})">
+          <path d="M-62,-40 H62 V44 H-62 Z" fill="#1d2a3d" stroke="#4a6b8a" stroke-width="3"/>
+          <path d="M-62,-40 L0,-64 L62,-40" fill="#22334a" stroke="#4a6b8a" stroke-width="3"/>
+          <rect x="-34" y="-14" width="68" height="22" rx="4" fill="#0d1420" stroke="#22c1a8" stroke-width="1.6"/>
+          <text x="0" y="2" text-anchor="middle" font-size="10.5" fill="#22c1a8" font-family="monospace">BATCH?</text>
+          ${shrimp(-24,26,.3,4)}${shrimp(24,26,.3,-4)}</g>`).join('')}
+        ${[[170,330],[330,330],[490,330]].map(([x,y],i)=>`<text x="${x}" y="${y}" text-anchor="middle" font-size="11.5" fill="#e8b4b4" font-family="monospace">${['2026201826 +2','+3 more','6 parents'][i]}</text>`).join('')}
+        <path d="M232,262 H268 M392,262 H428" stroke="#eda100" stroke-width="3" stroke-linecap="round" stroke-dasharray="5 5"/>
+        <text x="360" y="372" text-anchor="middle" font-size="13" fill="#eda100" font-weight="700">batches merge · lineage multiplies</text>` },
+
+    { key:'Export', title:'It ships, and someone eats it', kg:'PO assigned', kgl:'or held as dummy stock',
+      cap:'The carton is assigned a purchase order and exported. Somewhere on the other side of the world it reaches a plate. If a problem shows up there, every question runs backwards through everything you just saw.',
+      art:`<path d="M40,300 Q180,286 320,300 T680,300" stroke="#2f7d9b" stroke-width="3" fill="none" opacity=".6"/>
+        <path d="M40,322 Q200,308 360,322 T680,322" stroke="#2f7d9b" stroke-width="2.5" fill="none" opacity=".35"/>
+        <g transform="translate(250,232)">
+          <path d="M-150,26 H140 L108,74 H-118 Z" fill="#1d2a3d" stroke="#5d7d9c" stroke-width="3"/>
+          <rect x="-124" y="-6" width="60" height="32" fill="#22334a" stroke="#4a6b8a" stroke-width="2"/>
+          <rect x="-58" y="-6" width="60" height="32" fill="#2b4a63" stroke="#4a6b8a" stroke-width="2"/>
+          <rect x="8" y="-6" width="60" height="32" fill="#22334a" stroke="#4a6b8a" stroke-width="2"/>
+          <rect x="-124" y="-40" width="60" height="32" fill="#2b4a63" stroke="#4a6b8a" stroke-width="2"/>
+          <rect x="-58" y="-40" width="60" height="32" fill="#22334a" stroke="#4a6b8a" stroke-width="2"/>
+          <rect x="76" y="-40" width="52" height="66" rx="4" fill="#16202f" stroke="#5d7d9c" stroke-width="2.5"/>
+        </g>
+        <g transform="translate(560,226)">
+          <ellipse cx="0" cy="20" rx="74" ry="26" fill="#16202f" stroke="#5d7d9c" stroke-width="2.5"/>
+          <ellipse cx="0" cy="16" rx="52" ry="17" fill="#0e1522"/>
+          ${shrimp(-14,12,.36,-6,'#ff7a5c','#c4432a')}${shrimp(20,18,.32,8,'#ff7a5c','#c4432a')}
+          <path d="M96,-16 V34 M104,-16 V34 M112,-16 V34 M88,34 h30 v18 h-30 Z" stroke="#c3cfdd" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+          <text x="0" y="66" text-anchor="middle" font-size="12.5" fill="#7fa8bd">fork</text>
+        </g>` },
+
+    { key:'Lineage', title:'Now answer: which pond?', kg:'6 parents', kgl:'in a single carton',
+      cap:'That is the whole problem in one question. After grading splits it and packing merges it, a table cannot answer where a carton came from. A knowledge graph can, because it stores the relationships, not just the rows. That is what SeaTrace was built to do.',
+      art:`${[0,1,2,3,4,5].map(i=>{const x=90+i*84,y=110;return `<rect x="${x-36}" y="${y-24}" width="72" height="48" rx="8" fill="#101a26" stroke="#e34948" stroke-width="2"/>
+          <text x="${x}" y="${y+5}" text-anchor="middle" font-size="10.5" fill="#e8b4b4" font-family="monospace">26018${20+i*2}</text>
+          <path d="M${x},${y+26} C${x},${y+90} 360,${y+90} 360,238" stroke="#e34948" stroke-width="1.7" fill="none" opacity=".5" stroke-dasharray="5 4"/>`;}).join('')}
+        <g transform="translate(360,268)">
+          <path d="M-66,-30 H66 V44 H-66 Z" fill="#1d2a3d" stroke="#22c1a8" stroke-width="3"/>
+          <path d="M-66,-30 L0,-56 L66,-30" fill="#22334a" stroke="#22c1a8" stroke-width="3"/>
+          <text x="0" y="16" text-anchor="middle" font-size="12" fill="#22c1a8" font-weight="700">ONE CARTON</text>
+        </g>
+        <text x="360" y="368" text-anchor="middle" font-size="13" fill="#22c1a8" font-weight="700">six parent batches · a graph question, not a table question</text>` },
+  ];
+
+  const jr = document.getElementById('journey');
+  if (jr) {
+    const art = document.getElementById('jrArt'), copy = document.getElementById('jrCopy'), rail = document.getElementById('jrRail');
+    const prevB = document.getElementById('jrPrev'), nextB = document.getElementById('jrNext');
+    let step = 0;
+    rail.innerHTML = SCENES.map((s, i) => `<div class="jr-stop" data-i="${i}"><i></i><b>${s.key}</b></div>`).join('');
+    const stops = [...rail.querySelectorAll('.jr-stop')];
+    stops.forEach(el => el.addEventListener('click', () => draw(+el.dataset.i)));
+
+    function draw(i) {
+      step = Math.max(0, Math.min(SCENES.length - 1, i));
+      const s = SCENES[step];
+      art.innerHTML = `<svg viewBox="0 0 720 400" role="img" aria-label="${s.title}">${s.art}</svg>`;
+      copy.innerHTML = `<div class="k">Stop ${step + 1} of ${SCENES.length} · ${s.key}</div>
+        <h3>${s.title}</h3><p>${s.cap}</p>
+        <div class="jr-kg"><b>${s.kg}</b><span>${s.kgl}</span></div>`;
+      if (!reduce) {
+        [art, copy].forEach(el => { el.style.opacity = 0; el.style.transform = 'translateY(10px)';
+          requestAnimationFrame(() => { el.style.transition = 'opacity .45s, transform .45s'; el.style.opacity = 1; el.style.transform = 'none'; }); });
+      }
+      stops.forEach((el, j) => { el.classList.toggle('on', j === step); el.classList.toggle('done', j < step); });
+      prevB.disabled = step === 0; nextB.disabled = step === SCENES.length - 1;
+    }
+    function open() { jr.classList.add('on'); document.body.style.overflow = 'hidden'; draw(0); }
+    function close() { jr.classList.remove('on'); document.body.style.overflow = ''; }
+    document.getElementById('openJourney').addEventListener('click', open);
+    document.getElementById('jrClose').addEventListener('click', close);
+    prevB.addEventListener('click', () => draw(step - 1));
+    nextB.addEventListener('click', () => draw(step + 1));
+    let wheelLock = 0;
+    jr.addEventListener('wheel', e => {
+      if (Math.abs(e.deltaY) < 12) return;
+      const now = Date.now(); if (now - wheelLock < 520) return; wheelLock = now;
+      draw(step + (e.deltaY > 0 ? 1 : -1));
+    }, { passive: true });
+    window.addEventListener('keydown', e => {
+      if (!jr.classList.contains('on')) return;
+      if (e.key === 'Escape') { close(); }
+      if (['ArrowRight', 'ArrowDown', ' '].includes(e.key)) { e.preventDefault(); e.stopPropagation(); draw(step + 1); }
+      if (['ArrowLeft', 'ArrowUp'].includes(e.key)) { e.preventDefault(); e.stopPropagation(); draw(step - 1); }
+    }, true);
+  }
 
   const slides = [...document.querySelectorAll('section.slide')];
   const railEl = document.getElementById('rail');
