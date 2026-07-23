@@ -240,6 +240,86 @@
   .lessons .card p { font-size:14.5px; color:var(--ink-200); margin-top:6px; }
   .lessons .change { border-top:3px solid var(--warn); }
 
+  /* ===== V2 rebuild components ===== */
+  /* epic strip (E1) */
+  .epics { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-top:22px; }
+  @media (max-width:900px){ .epics { grid-template-columns:repeat(2,1fr); } }
+  .epic { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px 15px; border-top:3px solid var(--accent); transition:transform .25s, border-color .25s, box-shadow .25s; }
+  .epic:hover { transform:translateY(-3px); border-color:rgba(122,178,230,.4); box-shadow:0 14px 32px rgba(0,0,0,.34); }
+  .epic .en { font-family:"JetBrains Mono",monospace; font-size:10.5px; color:var(--accent-300); letter-spacing:.1em; }
+  .epic .et { font-size:13.5px; font-weight:700; color:var(--fg); margin-top:6px; line-height:1.25; }
+  .epic .ed { font-size:11.5px; color:var(--ink-400); margin-top:5px; line-height:1.35; }
+
+  /* spoken-line callout */
+  .callout { border-left:3px solid var(--aqua); background:rgba(34,193,168,.07); border-radius:0 10px 10px 0; padding:14px 18px; margin-top:18px; font-size:15px; color:var(--ink-100); font-style:italic; }
+  .callout b { color:var(--aqua); font-style:normal; }
+
+  /* horizontal pipeline for E2 with parallel note */
+  .pipewrap { margin-top:22px; }
+  .pipe .box .idx { display:inline-block; width:18px; height:18px; border-radius:50%; background:var(--accent); color:#fff; font-size:10.5px; font-weight:700; text-align:center; line-height:18px; margin-bottom:6px; font-family:"JetBrains Mono",monospace; }
+  .parallel-note { margin-top:12px; display:flex; align-items:center; gap:10px; font-size:12.5px; color:var(--aqua); background:rgba(34,193,168,.06); border:1px dashed rgba(34,193,168,.4); border-radius:8px; padding:9px 14px; }
+  .machinery { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:20px; }
+  @media (max-width:900px){ .machinery { grid-template-columns:repeat(2,1fr); } }
+  .mcard { background:var(--ink-900); border:1px solid var(--border); border-radius:11px; padding:13px 15px; }
+  .mcard .mh { font-size:12.5px; font-weight:700; color:var(--accent-200); display:flex; align-items:center; gap:7px; }
+  .mcard .mb { font-size:12.5px; color:var(--ink-300); margin-top:6px; line-height:1.4; }
+  .mcard.flag { border-color:rgba(237,161,0,.45); }
+  .mcard.flag .mh { color:var(--warn); }
+
+  /* E3 uncertainty grid + eval scorecard */
+  .ugrid { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:22px; }
+  @media (max-width:900px){ .ugrid { grid-template-columns:1fr; } }
+  .ucard { background:var(--card); border:1px solid var(--border); border-radius:13px; padding:18px 20px; }
+  .ucard h3 { font-size:15px; margin-bottom:4px; }
+  .ucard .tag { font-family:"JetBrains Mono",monospace; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-500); }
+  .ucard p { font-size:13.5px; color:var(--ink-300); margin-top:9px; line-height:1.5; }
+  .ucard.accent { border-top:3px solid var(--accent); }
+  .ucard.aqua { border-top:3px solid var(--aqua); }
+  .ucard.warn { border-top:3px solid var(--warn); }
+  .ucard.bad  { border-top:3px solid var(--bad); }
+  .evalscore { margin-top:11px; display:flex; flex-direction:column; gap:6px; }
+  .evalrow { display:flex; align-items:center; gap:10px; font-size:12.5px; padding:6px 10px; border-radius:8px; background:var(--ink-900); border:1px solid var(--border); }
+  .evalrow .badge { font-family:"JetBrains Mono",monospace; font-size:10px; font-weight:700; padding:2px 8px; border-radius:999px; flex:none; }
+  .evalrow.pass .badge { background:rgba(27,175,122,.16); color:var(--good); border:1px solid rgba(27,175,122,.4); }
+  .evalrow.fail .badge { background:rgba(227,72,72,.14); color:var(--bad); border:1px solid rgba(227,72,72,.45); }
+  .evalrow .en { color:var(--ink-200); flex:1; }
+  .evalrow .ex { color:var(--ink-500); font-size:11px; }
+
+  /* vendor deliverables (E4 build vs buy) */
+  .vendor { margin-top:14px; background:#0d1b2e; border:1px solid #1c3a5e; border-radius:11px; padding:14px 16px; }
+  .vendor .vt { font-family:"JetBrains Mono",monospace; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--accent-300); margin-bottom:9px; }
+  .vendor .vitems { display:flex; flex-wrap:wrap; gap:8px; }
+  .vendor .vitems span { font-size:12px; color:var(--ink-200); background:var(--ink-900); border:1px solid var(--border); border-radius:7px; padding:6px 11px; }
+
+  /* rank badge in PO widget */
+  .pw .rank { font-family:"JetBrains Mono",monospace; font-size:11px; font-weight:700; color:var(--ink-500); min-width:20px; text-align:center; }
+  .pw .row.top .rank { color:var(--accent-200); }
+  .pw .subt { font-family:"JetBrains Mono",monospace; font-size:11px; color:var(--ink-500); margin-top:3px; }
+
+  /* outcomes: on-time banner + real KPI chips */
+  .ontime { display:flex; align-items:center; gap:12px; margin-top:20px; background:rgba(27,175,122,.08); border:1px solid rgba(27,175,122,.32); border-radius:11px; padding:13px 18px; font-size:14px; color:var(--ink-100); }
+  .ontime b { color:var(--good); }
+  .kpinames { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+  .kpinames span { font-size:12px; color:var(--ink-300); background:var(--ink-900); border:1px solid var(--border); border-radius:999px; padding:6px 13px; }
+  .kpinames span b { color:var(--accent-200); font-weight:600; }
+
+  /* lessons rebuild: 2-col + full-width principle banner */
+  .lesson-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:22px; align-items:stretch; }
+  @media (max-width:900px){ .lesson-grid { grid-template-columns:1fr; } }
+  .lesson-col { display:flex; flex-direction:column; gap:18px; }
+  .lcard { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:20px 22px; flex:1; }
+  .lcard .n { font-family:"JetBrains Mono",monospace; color:var(--accent-300); font-size:11px; letter-spacing:.12em; display:block; margin-bottom:9px; }
+  .lcard h3 { font-size:17px; }
+  .lcard p { font-size:14.5px; color:var(--ink-200); margin-top:8px; line-height:1.55; }
+  .lcard.change { border-top:3px solid var(--warn); }
+  .lcard.change .n { color:var(--warn); }
+  .doovers { list-style:none; margin-top:12px; display:flex; flex-direction:column; gap:11px; }
+  .doovers li { display:flex; gap:12px; align-items:flex-start; font-size:14px; color:var(--ink-200); line-height:1.5; }
+  .doovers li .dn { font-family:"JetBrains Mono",monospace; font-size:11px; font-weight:700; color:var(--warn); background:rgba(237,161,0,.12); border:1px solid rgba(237,161,0,.4); border-radius:6px; padding:2px 8px; flex:none; margin-top:1px; }
+  .principle { margin-top:22px; background:linear-gradient(90deg,rgba(10,102,194,.12),rgba(34,193,168,.08)); border:1px solid var(--border); border-radius:14px; padding:22px 26px; text-align:center; }
+  .principle .pq { font-size:clamp(16px,2vw,21px); font-weight:700; color:var(--fg); letter-spacing:-.3px; line-height:1.4; }
+  .principle .ps { font-size:13px; color:var(--ink-400); margin-top:8px; }
+
   /* closer mock */
   .mock { background:#fcfcfb; color:#0b0b0b; border-radius:12px; padding:16px; font-size:12px; box-shadow:0 20px 60px rgba(0,0,0,0.5); }
   .mock .mrow { display:flex; align-items:center; gap:10px; padding:7px 8px; border-bottom:1px solid #e1e0d9; }
@@ -431,7 +511,7 @@
       </div>
       <div>
         <ul class="pts reveal">
-          <li><b>Cadence:</b> 11-day sprints; I ran the ceremonies, including two daily stand-ups at 10:00 AM and 9:00 PM, the later one timed so client and SME conversations could actually happen.</li>
+          <li><b>What I ran:</b> the backlog and every ceremony, planning through review. How I used the cadence to unblock delivery is the next section.</li>
           <li><b>With the PM function:</b> roadmap flowed down; evidence flowed back up. The scope call later in this story is that loop working.</li>
           <li><b>With design:</b> refinement loop. UI variants and completion CTAs were A/B-tested through our Customer Intelligence Dashboard; engineering feasibility fed back before design over-committed.</li>
           <li><b>With data science and AI:</b> two rules. Deterministic first: no black box, every insight reproducible with an evidence chain. And LLM insight-card prompt testing behind format guardrails.</li>
@@ -441,27 +521,49 @@
   </div>
 </section>
 
-<!-- S3 EXECUTION: BACKLOG & STORIES -->
+<!-- S3 EXECUTION: E1 VISION -> BACKLOG -->
 <section class="slide" id="s3" data-rail="Execution">
   <div class="frame">
     <div class="kicker reveal">03 · Execution &amp; Product Owner (PO) Activities</div>
-    <h2 class="reveal">Translating Ideas into Action</h2>
-    <div class="cols">
+    <h2 class="reveal">A vision, a partner commitment, and no backlog.</h2>
+    <p class="lede reveal">What arrived was strategy, not a backlog. I turned it into five epics, then specified each so an engineer never had to guess intent.</p>
+
+    <div class="epics reveal">
+      <div class="epic"><div class="en">EPIC 1</div><div class="et">ImpactKPI Top Insights</div><div class="ed">the KPIs planners open first, served off the graph</div></div>
+      <div class="epic"><div class="en">EPIC 2</div><div class="et">Base Forms</div><div class="ed">structured data entry into the knowledge graph</div></div>
+      <div class="epic"><div class="en">EPIC 3</div><div class="et">KG Reports</div><div class="ed">batch cost, raw-material, traceability queries</div></div>
+      <div class="epic"><div class="en">EPIC 4</div><div class="et">QC Integration</div><div class="ed">antibiotic, microbial, organoleptic at every section</div></div>
+      <div class="epic"><div class="en">EPIC 5</div><div class="et">Exports + PO Module</div><div class="ed">auto-map purchase orders to identified batches</div></div>
+    </div>
+
+    <div class="cols" style="margin-top:22px">
       <div>
-        <h3 class="reveal" style="color:var(--ink-300)">Backlog Creation &amp; Refinement</h3>
-        <ul class="pts reveal" style="margin-top: 10px; margin-bottom: 20px;">
-          <li><b>Refinement Cadence:</b> Backlog prioritised and refined via tight 11-day sprints, planning calls, daily stand-ups twice a day (10:00 AM &amp; 9:00 PM), core team meetings, and regular SME/client conversations.</li>
-          <li><b>Telemetry &amp; Prioritization:</b> Daily telemetry data reviewed in stand-ups to drive prioritization and unblock technical team issues.</li>
-        </ul>
-        
-        <h3 class="reveal" style="color:var(--ink-300)">Writing Stories with Clear Acceptance Criteria</h3>
-        <ul class="pts reveal" style="margin-top: 10px;">
-          <li><b>Mandatory Gates:</b> Product modifications, cataloging, documentation, and QA testing are strictly mandatory before pushing to dev, prod, or any environment.</li>
-          <li><b>PRD &amp; Specs:</b> Guided by a structured PRD with clearly defined specifications, containing direct references to the product vision, ideas, and functional prototypes.</li>
-        </ul>
+        <div class="chips reveal" style="margin-top:0">
+          <span class="chip"><b>PRD structure</b></span>
+          <span class="chip">problem</span><span class="chip">personas</span><span class="chip">scope</span>
+          <span class="chip">technical</span><span class="chip">logic &amp; formulae</span><span class="chip">UX</span>
+          <span class="chip">validation</span><span class="chip">success criteria</span>
+        </div>
+        <div class="spec reveal" style="margin-top:16px">
+          <div class="t">Acceptance criteria · PO prioritisation</div>
+          <ul>
+            <li>Order pool filterable: plant, promise week, buyer tier, risk bucket</li>
+            <li>Default sort by priority score; every row shows its top-2 reasons</li>
+            <li>Freeze-plan snapshot with day-over-day deltas</li>
+          </ul>
+          <div class="t" style="margin-top:12px;color:var(--aqua)">Exit criteria (not "the model is accurate")</div>
+          <ul>
+            <li>Ranking reproducible from the same inputs</li>
+            <li>Machine-readable explanation JSON per PO</li>
+            <li>Daily refresh end-to-end under 10 minutes at one plant</li>
+          </ul>
+        </div>
+        <div class="callout reveal">Acceptance criteria for an AI feature are not <b>"the model is accurate."</b> They are reproducible, explained, and fast enough for the 6 AM planning meeting.</div>
       </div>
+
       <div class="pw reveal" id="pw">
-        <div class="t">Live · Purchase Order (PO) priority score = wt·Time + (1&minus;wt)·Buyer</div>
+        <div class="t">Live · Purchase Order priority queue</div>
+        <div class="subt">score = Time × w + Buyer × (1 &minus; w)</div>
         <div class="wt">
           <span>Buyer weight</span>
           <input type="range" id="wt" min="0" max="100" value="65">
@@ -469,96 +571,143 @@
         </div>
         <div class="wlbl" id="wlbl">Time 0.65 · Buyer 0.35</div>
         <div class="rows" id="pwrows"></div>
-        <div class="hintline">Drag the weight slider: the Purchase Order (PO) queue re-ranks live. Showing top-2 reasons is a product requirement. The weighting is a product decision.</div>
+        <div class="hintline">Drag the slider: the queue re-ranks live and the rank numbers move. Showing the top-2 reasons is a product requirement; the weighting is a product decision.</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- S4 EXECUTION: CADENCE & BLOCKERS -->
+<!-- S4 EXECUTION: E2 THE FORMS BLOCKER -->
 <section class="slide" id="s4" data-rail="Execution">
   <div class="frame">
     <div class="kicker reveal">03 · Execution &amp; Product Owner (PO) Activities</div>
-    <h2 class="reveal">Managing Sprint Cadence, Blockers &amp; Capacity</h2>
-    <div class="cols">
-      <div>
-        <h3 class="reveal" style="color:var(--ink-300)">Sprint Cadence &amp; Rituals</h3>
-        <ul class="pts reveal" style="margin-top:10px; margin-bottom:20px;">
-          <li><b>Sprint Length:</b> Managed 11-day sprints, using daily planning calls and core team alignment meetings.</li>
-          <li><b>Touchpoints:</b> Daily stand-ups twice a day (10:00 AM and 9:00 PM), and regular client/SME feedback calls to ensure alignment.</li>
-        </ul>
-        
-        <h3 class="reveal" style="color:var(--ink-300)">Unblocking and Capacity Management</h3>
-        <ul class="pts reveal" style="margin-top:10px;">
-          <li><b>Engineering Blockers:</b> Unblocked the technical team expeditiously by connecting engineers directly with subject matter experts (SMEs) to bypass domain translation delays.</li>
-          <li><b>Capacity Adjustments:</b> Handled scope adjustments (increase or decrease) dynamically by hiring additional part-time members to meet timeline pressures.</li>
-        </ul>
+    <h2 class="reveal">The forms stalled. Here is what I changed.</h2>
+    <p class="lede reveal">The data-entry forms were foundational, and they stopped moving: the data lived in the client's backend, too many stakeholders touched every decision, and the team was not yet using AI tooling well. I did not escalate and wait. I sequenced it.</p>
+
+    <div class="pipewrap reveal">
+      <div class="pipe">
+        <div class="step"><div class="box"><span class="idx">1</span><b>WIREFRAME</b><span>argue about a picture, not a paragraph</span></div></div>
+        <span class="arr">&rarr;</span>
+        <div class="step"><div class="box"><span class="idx">2</span><b>SCHEMA</b><span>deliberated, owned by backend, one owner</span></div></div>
+        <span class="arr">&rarr;</span>
+        <div class="step"><div class="box"><span class="idx">3</span><b>API + MOCKS</b><span>contract with mock payloads</span></div></div>
+        <span class="arr">&rarr;</span>
+        <div class="step"><div class="box"><span class="idx">4</span><b>BUILD</b><span>swap mocks for real endpoints</span></div></div>
+        <span class="arr">&rarr;</span>
+        <div class="step"><div class="box"><span class="idx">5</span><b>DESIGN + SME</b><span>final review and sign-off</span></div></div>
       </div>
-      
-      <div class="card reveal" style="border-left:3px solid var(--warn); padding: 22px;">
-        <h3>Data Uncertainty as a Product Rule</h3>
-        <p style="font-size:14.5px;color:var(--ink-200);margin-top:10px">Purchase Orders (POs) with no derivable promise date are marked <b>Data Incomplete</b> and visibly excluded from the ranking queue.</p>
-        <p style="font-size:14.5px;color:var(--ink-200);margin-top:8px"><b>"% of ranked POs using assumptions"</b> is an instrumented product KPI. The data mess is exposed and priced, never hidden inside a model's prediction.</p>
+      <div class="parallel-note">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6v.01M3 12v.01M3 18v.01"/></svg>
+        Because the API contract shipped with mock payloads, frontend and backend built at the same time, not in sequence. Multiple forms ran this pipeline in parallel, status checked daily.
+      </div>
+    </div>
+
+    <div class="machinery reveal">
+      <div class="mcard">
+        <div class="mh"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg> 11-day sprints</div>
+        <div class="mb">Tuned to the release and review rhythm the team actually worked to, not a textbook two weeks.</div>
+      </div>
+      <div class="mcard flag">
+        <div class="mh"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></svg> Two stand-ups a day</div>
+        <div class="mb">10:00 AM and 9:00 PM. The 9 PM one existed so client and SME conversations could actually happen across the time-zone gap.</div>
+      </div>
+      <div class="mcard">
+        <div class="mh"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M9 7a4 4 0 108 0 4 4 0 00-8 0M22 21v-2a4 4 0 00-3-3.87"/></svg> Capacity, not quality</div>
+        <div class="mb">When scope moved, I brought in part-time members rather than cutting the definition of done.</div>
+      </div>
+      <div class="mcard">
+        <div class="mh"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></svg> Unblock by access</div>
+        <div class="mb">My main lever: an engineer in front of the right SME immediately, rather than a domain question sitting for two days.</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- S5 EXECUTION: AI/ML & DATA ISSUES -->
+<!-- S5 EXECUTION: E3 WHERE THE UNCERTAINTY LIVES -->
 <section class="slide" id="s5" data-rail="Execution">
   <div class="frame">
     <div class="kicker reveal">03 · Execution &amp; Product Owner (PO) Activities</div>
-    <h2 class="reveal">AI/ML: Handling Uncertainty, Spikes &amp; Data Issues</h2>
-    <div class="cols">
-      <div>
-        <h3 class="reveal" style="color:var(--ink-300)">Client Insights &amp; LLM Guardrails</h3>
-        <ul class="pts reveal" style="margin-top:10px; margin-bottom:20px;">
-          <li><b>Insights at Scale:</b> Designed and deployed LLM prompts in a parallel pod to generate client-facing insights at scale.</li>
-          <li><b>Evaluation and Evals:</b> Utilized an LLM-as-a-judge system, structured evaluation sets, and competing LLMs to verify that guardrails were respected and formatting/semantic criteria met.</li>
-        </ul>
-        
-        <h3 class="reveal" style="color:var(--ink-300)">Precision-Recall and Data Flow</h3>
-        <ul class="pts reveal" style="margin-top:10px;">
-          <li><b>Strategic Trade-offs:</b> The Precision-Recall trade-off was decided and locked at the very beginning of the product planning stage, rather than left as a post-implementation tuning task.</li>
-          <li><b>Cross-Collaboration:</b> Handled data flow and schema anomalies through close cross-collaboration between the backend and full-stack engineering teams to resolve pipeline blockages.</li>
-        </ul>
+    <h2 class="reveal">Where the uncertainty actually lives.</h2>
+    <p class="lede reveal">In an AI product, the honest question is not "is the model right" but "what do we do when we cannot be sure." In every case my answer was a product rule, not model magic.</p>
+
+    <div class="ugrid reveal">
+      <div class="ucard accent">
+        <div class="tag">Data uncertainty</div>
+        <h3>Mark it, do not guess it</h3>
+        <p>Purchase orders with no derivable promise date are marked <b>Data Incomplete</b> and visibly excluded from the ranking queue. <b>"% of ranked POs using assumptions"</b> is an instrumented KPI: the data mess is exposed and priced, never hidden inside a prediction.</p>
       </div>
-      
-      <div class="card reveal" style="border-left:3px solid var(--accent); padding: 22px;">
-        <h3>The Precision-Recall Rule</h3>
-        <p style="font-size:14.5px;color:var(--ink-200);margin-top:10px">In automated batch verification, false positives (wrongly flagging a batch) delay shipping, while false negatives (missing a break) cause expensive recalls.</p>
-        <p style="font-size:14.5px;color:var(--ink-200);margin-top:8px">Establishing operational alignment early on allowed the engineering team to optimize parameters specifically for the business cost curve.</p>
+      <div class="ucard aqua">
+        <div class="tag">Model uncertainty</div>
+        <h3>No black box</h3>
+        <p>Every insight had to be reproducible from the knowledge graph with its evidence chain. If it could not be traced back to the rows that produced it, it did not ship. Determinism first, generation second.</p>
+      </div>
+      <div class="ucard bad">
+        <div class="tag">LLM evals · and the ones that failed</div>
+        <h3>Guardrails that actually caught things</h3>
+        <div class="evalscore">
+          <div class="evalrow pass"><span class="badge">PASS</span><span class="en">Format conformance</span><span class="ex">valid JSON, required fields</span></div>
+          <div class="evalrow pass"><span class="badge">PASS</span><span class="en">Faithful to the graph</span><span class="ex">no claim without evidence</span></div>
+          <div class="evalrow fail"><span class="badge">FAIL</span><span class="en">Numeric accuracy on cost deltas</span><span class="ex">judge + rival model caught it, prompt fixed</span></div>
+          <div class="evalrow fail"><span class="badge">FAIL</span><span class="en">No unprompted recommendations</span><span class="ex">tone drift caught, constraint added</span></div>
+        </div>
+      </div>
+      <div class="ucard warn">
+        <div class="tag">Data quality, before the cloud</div>
+        <h3>Consolidate, then migrate</h3>
+        <p>The source system was <b>79 tables</b>. Rather than lift the mess into the cloud, we consolidated and closed data endpoints with no determined destination first, and surfaced <b>mass-balance breaks</b> so the graph inherited clean lineage, not hidden gaps.</p>
       </div>
     </div>
+
+    <div class="callout reveal">The <b>precision-recall trade-off was decided at planning</b>, not left as post-implementation tuning. A false positive delays a shipment; a false negative causes a recall. Those costs are wildly different, so where you sit on that curve is a product decision, made before anyone trains anything.</div>
   </div>
 </section>
 
-<!-- S6 EXECUTION: SCOPE DECISIONS & DELIVERY SURPRISE -->
+<!-- S6 EXECUTION: E4 SCOPE CALLS & SURPRISE -->
 <section class="slide" id="s6" data-rail="Execution">
   <div class="frame">
     <div class="kicker reveal">03 · Execution: scope decisions &amp; delivery surprise</div>
-    <h2 class="reveal">Scope Decisions &amp; The AI-First Delivery Surprise</h2>
-    <div class="cols">
-      <div class="card reveal" style="padding: 22px;">
-        <h3 style="color:var(--accent-300)">Scope Decisions: Prioritized &amp; Partnered</h3>
-        <dl style="margin-top: 10px;">
-          <dt style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-400); text-transform:uppercase;">Call 1 · MVP over factory intelligence</dt>
-          <dd style="font-size:14px; color:var(--ink-200); margin-bottom:12px; margin-top:3px;">Led two pods simultaneously. Prioritized the SeaTrace MVP for delivery to support the committed JV partner on plan.</dd>
-          
-          <dt style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-400); text-transform:uppercase;">Call 2 · Partnered for the knowledge graph core</dt>
-          <dd style="font-size:14px; color:var(--ink-200); margin-top:3px;">Partnered with a specialist vendor (NeuralAxis) for core graph querying deliverables, letting our team focus on forms, dashboard reports, and planning logic.</dd>
+    <h2 class="reveal">Two scope calls and one surprise.</h2>
+    <div class="decide reveal">
+      <div class="card">
+        <h3 style="color:var(--accent-300)">Call 1 · Prioritise the MVP</h3>
+        <dl>
+          <dt>The call</dt>
+          <dd>Two pods competed for the same people. I prioritised the SeaTrace MVP over the factory-intelligence work.</dd>
+          <dt>Why</dt>
+          <dd>A joint-venture partner was on a committed plan; the MVP protected that commitment.</dd>
+          <dt>The result</dt>
+          <dd>Factory intelligence continued behind it and later became its own product line. The call held up.</dd>
         </dl>
       </div>
-      
-      <div class="card reveal" style="padding: 22px;">
-        <h3 style="color:var(--aqua)">The Delivery Surprise: AI-First Velocity</h3>
-        <ul class="pts reveal" style="margin-top:10px;">
-          <li><b>Developer Empowerment:</b> Standardizing AI coding tools and LLM API access was a massive delivery lever that accelerated forms and database schema work.</li>
-          <li><b>Compounding Growth:</b> Team capacity compounded sprint-over-sprint, proving that developer enablement is a key Product Owner (PO) tool, not just an IT task.</li>
-        </ul>
-        <div style="margin-top: 18px; display:flex; flex-direction:column; gap:8px;">
-          <div style="font-size:11px;color:var(--ink-400)">Illustrative team velocity increase with AI tools:</div>
+      <div class="card">
+        <h3 style="color:var(--accent-300)">Call 2 · Buy the graph, build the value</h3>
+        <dl>
+          <dt>The call</dt>
+          <dd>We did not build the knowledge-graph engine ourselves. We partnered with a specialist and contracted their deliverables.</dd>
+          <dt>Why</dt>
+          <dd>Our differentiation was the forms, reports and planning logic on top, not re-implementing graph infrastructure.</dd>
+        </dl>
+        <div class="vendor">
+          <div class="vt">Vendor deliverables, in the roadmap</div>
+          <div class="vitems">
+            <span>Batch &amp; route representation</span>
+            <span>95% mass balance</span>
+            <span>Cycle times per section</span>
+            <span>Cost per batch</span>
+            <span>Pro-rata allocation on batch mixing</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card reveal" style="margin-top:20px; border-top:3px solid var(--aqua); padding:20px 22px;">
+      <h3 style="color:var(--aqua)">The surprise · AI-first velocity</h3>
+      <div class="cols" style="margin-top:12px; grid-template-columns:1.3fr 1fr; align-items:center;">
+        <p style="font-size:14.5px;color:var(--ink-200)">When we gave developers vetted AI coding tools and LLM API access for the forms and schema work, shipping speed jumped visibly and capability compounded sprint over sprint. I now treat developer AI enablement as a delivery lever a Product Owner should pull, not an IT procurement question.</p>
+        <div>
+          <div style="font-size:11px;color:var(--ink-400);margin-bottom:8px">Illustrative team velocity with AI tooling</div>
           <div style="height:14px;border-radius:7px;background:linear-gradient(90deg,var(--accent),var(--accent-300));width:0%;transition:width 1s cubic-bezier(.2,.7,.2,1)" data-w="78%" class="aibar"></div>
+          <div style="font-size:11px;color:var(--ink-500);margin-top:6px">Qualitative; no fabricated multiplier claimed.</div>
         </div>
       </div>
     </div>
@@ -576,16 +725,28 @@
       <div class="tile"><b class="num" data-to="2">0</b><span>pods led in parallel</span></div>
       <div class="tile"><b class="num" data-to="79">0</b><span>source tables mapped for the graph</span></div>
     </div>
+    <div class="ontime reveal">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--good);flex:none"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      <span><b>Delivered on scope:</b> the four core MVP modules landed in roughly three months, with traceability core first, exactly as the contract with the partner required.</span>
+    </div>
     <div class="twocol">
       <div class="card ship reveal">
         <h3>SeaTrace · shipped</h3>
         <ul>
-          <li>Impact KPI dashboard</li>
+          <li>Impact KPI dashboard (Epic 1)</li>
           <li>Batch-traceability core on the knowledge graph</li>
-          <li>Data-entry forms</li>
-          <li>Compliance reports + Purchase Order (PO) module</li>
+          <li>Data-entry forms + KG reports (Epics 2, 3)</li>
+          <li>QC integration + Exports / PO module (Epics 4, 5)</li>
         </ul>
-        <p style="font-size:12.5px;color:var(--ink-400);margin-top:10px">Product-health KPIs designed before launch: % days with a plan snapshot · % ranked Purchase Orders (POs) using assumptions · booking accuracy · batch conformance.</p>
+        <p style="font-size:12.5px;color:var(--ink-400);margin-top:10px">Product-health KPIs designed <b>before</b> launch, not retrofitted:</p>
+        <div class="kpinames">
+          <span><b>Booking accuracy</b></span>
+          <span><b>Batch conformance %</b></span>
+          <span><b>First-pass yields</b></span>
+          <span><b>Grade-mix vs plan</b></span>
+          <span>% days with a plan snapshot</span>
+          <span>% ranked POs on assumptions</span>
+        </div>
       </div>
       <div class="card parallel reveal">
         <h3>In parallel · the factory-intelligence pod I also led</h3>
@@ -593,7 +754,7 @@
           <div><b class="num" data-to="75" data-prefix="+" data-suffix="%">0</b><span>DAU / MAU growth</span></div>
           <div><b><span class="num" data-to="16">0</span> &rarr; <span class="num" data-to="59">0</span> min</b><span>avg session (~3.7x): users ran their day in it</span></div>
         </div>
-        <p style="font-size:12.5px;color:var(--ink-400)">The Customer Intelligence product I ran alongside SeaTrace. Being explicit: these engagement gains are its, not the traceability MVP's. Running both is the point.</p>
+        <p style="font-size:12.5px;color:var(--ink-400)">The Customer Intelligence product I ran alongside SeaTrace. Being explicit: these engagement gains are <b>its, not the traceability MVP's</b>. Running both in parallel is the point.</p>
       </div>
     </div>
     <div class="deferred reveal">
@@ -608,22 +769,33 @@
   <div class="frame">
     <div class="kicker reveal">05 · Lessons learned</div>
     <h2 class="reveal">Two lessons and one honest do-over.</h2>
-    <div class="lessons">
-      <div class="card reveal">
-        <b class="n">LESSON 1</b>
-        <h3>Explainability buys adoption</h3>
-        <p>Planners trusted the top-2-reasons column before they trusted the score. Deterministic, evidence-chain insights became a product principle, not a nice-to-have.</p>
+    <div class="lesson-grid reveal">
+      <div class="lesson-col">
+        <div class="lcard">
+          <span class="n">LESSON 1</span>
+          <h3>Explainability buys adoption</h3>
+          <p>Planners trusted the top-2-reasons column before they trusted the score. They would not act on a number they could not interrogate, so deterministic, evidence-chain insights became a product principle, not a nice-to-have.</p>
+        </div>
+        <div class="lcard">
+          <span class="n">LESSON 2</span>
+          <h3>Data quality is a product surface</h3>
+          <p>Make the mess visible and priced: Data Incomplete flags, mass-balance breaks, instrumented assumptions, and consolidating the source tables before they reached the cloud. Never let a model quietly paper over it.</p>
+        </div>
       </div>
-      <div class="card reveal">
-        <b class="n">LESSON 2</b>
-        <h3>Data quality is a product surface</h3>
-        <p>Make the mess visible and priced: Data Incomplete flags, mass-balance breaks, instrumented assumptions. Never let a model hide it.</p>
+      <div class="lcard change">
+        <span class="n">WHAT I WOULD CHANGE</span>
+        <h3>Standardise earlier, and plan for failure sooner</h3>
+        <p>I built the schema-first workflow reactively, halfway through, after the forms had already stalled. The cost was a sprint I did not need to lose.</p>
+        <ul class="doovers">
+          <li><span class="dn">1</span><span><b>Pre-mortem in planning.</b> Take failure feedback from the team in the sprint-planning call itself, or a short call right after, on what is likely to break, before committing the sprint.</span></li>
+          <li><span class="dn">2</span><span><b>Schema-first from sprint 0.</b> Institute the PRD &rarr; TRD workflow at the start, not mid-stream when a blocker forces it.</span></li>
+          <li><span class="dn">3</span><span><b>SMEs from day one.</b> Bring the client's subject-matter experts into refinement from the beginning, rather than meeting them at design review.</span></li>
+        </ul>
       </div>
-      <div class="card change reveal">
-        <b class="n" style="color:var(--warn)">WHAT I WOULD CHANGE</b>
-        <h3>Standardize earlier</h3>
-        <p>Institute the schema-first PRD &rarr; TRD workflow from sprint 0 instead of creating it mid-way when the forms stalled, and bring client SMEs into refinement from day one rather than at design review.</p>
-      </div>
+    </div>
+    <div class="principle reveal">
+      <div class="pq">A planner will not act on a number they cannot question, and a model cannot be trusted to hide a mess it never priced.</div>
+      <div class="ps">Both lessons are the same argument: build in the open.</div>
     </div>
   </div>
 </section>
@@ -664,8 +836,7 @@
     <p class="lede reveal">Everything shown today is inspectable.</p>
     <ul class="pts reveal" style="max-width:640px">
       <li><b>Live prototype:</b> portfolio-projects-newmed.vercel.app/copilot/</li>
-      <li><b>Source and docs:</b> github.com/nayanlal029/portfolio-projects-newmed</li>
-      <li><b>Full product requirements pack</b> (functional specs, TRD, design requirements, evals &amp; QA): available on request via the site.</li>
+      <li><b>Full product requirements pack</b> (functional specs, TRD, design requirements, evals &amp; QA): available on request.</li>
     </ul>
     <p class="reveal" style="margin-top:26px;font-size:13px;color:var(--ink-500)">Nayan Lal · nayanlal1909@gmail.com · linkedin.com/in/nayan-lal</p>
   </div>
@@ -677,7 +848,7 @@
 <!-- immersive batch journey (opened from slide 1) -->
 <div class="jr" id="journey" role="dialog" aria-modal="true" aria-label="Batch journey, pond to fork">
   <div class="jr-top">
-    <div class="t">Batch 2026201826 <span>· one real batch, pond to fork</span></div>
+    <div class="t">Batch <span class="batchid">SB-4471</span><span> · one traced batch, pond to fork</span></div>
     <button class="jr-close" id="jrClose">Close ✕</button>
   </div>
   <div class="jr-stage">
@@ -700,8 +871,15 @@
   const CLIENT_NAME = "Avanti Frozen Foods";
   document.querySelectorAll('.client').forEach(el => el.textContent = CLIENT_NAME);
 
+  // Batch identity: synthetic ID, masked from the source system. Change here only.
+  const BATCH_ID = "SB-4471";
+  // Six parent batches that merge into one carton (synthetic).
+  const PARENT_IDS = ["SB-4471","SB-4468","SB-4473","SB-4482","SB-4459","SB-4490"];
+  document.querySelectorAll('.batchid').forEach(el => el.textContent = BATCH_ID);
+
   // ---- farm-to-fork flow (edit STAGES/GRADES to change the diagram) ----
-  // Real figures from the batch-traceability flowchart, batch 2026201826.
+  // Representative figures for one traced batch. Measured through peeling;
+  // from soaking on, mass is a pro-rata estimate because batches merge (est.).
   const STAGES = [
     {n:"Farm & pond",  sub:"booked from farmer",  kg:2000},
     {n:"Purchase",     sub:"sampled at the pond", kg:1488.9},
@@ -709,10 +887,10 @@
     {n:"Beheading",    sub:"heads removed",       kg:1039.7},
     {n:"Grading",      sub:"sorted into counts",  kg:1026.8, fan:true},
     {n:"Peeling & cutting", sub:"2 batches merge",kg:1026.8, mix:"+2 batches"},
-    {n:"Soaking",      sub:"form factors applied",kg:1012},
-    {n:"IQF freeze",   sub:"3 more merge",        mix:"+3 batches"},
-    {n:"Packaging",    sub:"cartons built",       mix:"many parents"},
-    {n:"Export → fork",sub:"PO assigned"},
+    {n:"Soaking",      sub:"water uptake +12%",   kg:1150, est:true},
+    {n:"IQF freeze",   sub:"3 more merge",        kg:1120, est:true, mix:"+3 batches"},
+    {n:"Packaging",    sub:"cartons built",       kg:1085, est:true, mix:"many parents"},
+    {n:"Export → fork",sub:"PO assigned",         kg:1050, est:true},
   ];
   const GRADES = ["16/20","26/30","31/35","31/40","41/50","51/60"];
 
@@ -759,16 +937,18 @@
       const bx = cx + bw/2 + 20; // 315
       if(st.kg!=null){
         const barW = Math.max(10, 100 * (st.kg/2000));
-        s+=`<text x="${bx}" y="${Y+20}" font-size="11" fill="#d8dde6" font-weight="600">${st.kg.toLocaleString()} kg</text>`;
-        s+=`<rect x="${bx}" y="${Y+26}" width="${barW}" height="6" rx="3" fill="#22c1a8" opacity="0.85"/>`;
+        const col = st.est ? '#eda100' : '#22c1a8';
+        const label = (st.est?'~':'') + st.kg.toLocaleString() + ' kg' + (st.est?' est.':'');
+        s+=`<text x="${bx}" y="${Y+20}" font-size="11" fill="${st.est?'#e6c976':'#d8dde6'}" font-weight="600">${label}</text>`;
+        s+=`<rect x="${bx}" y="${Y+26}" width="${barW}" height="6" rx="3" fill="${col}" opacity="${st.est?0.6:0.85}"/>`;
         s+=`<rect x="${bx+barW}" y="${Y+26}" width="${100-barW}" height="6" rx="3" fill="#262c3a"/>`;
-      } else {
-        s+=`<text x="${bx}" y="${Y+24}" font-size="10" fill="#8b97ad" font-style="italic">no single mass</text>`;
       }
     });
     
     // Batch ID marker on Receiving (Stage 2)
-    s+=`<text x="${cx}" y="${y(2)-6}" text-anchor="middle" font-size="9" fill="#aacef0" font-weight="700">BATCH 2026201826</text>`;
+    s+=`<text x="${cx}" y="${y(2)-6}" text-anchor="middle" font-size="9" fill="#aacef0" font-weight="700">BATCH ${BATCH_ID}</text>`;
+    // Estimate legend (centered under the flow)
+    s+=`<text x="${cx}" y="${H-8}" text-anchor="middle" font-size="9.5" fill="#8b97ad">~est. = pro-rata share once batches merge</text>`;
     
     // Grade fan under Grading (Stage 4)
     // We will render it as a compact 3x2 grid of count grades on the right
@@ -821,7 +1001,7 @@
 
   // ================= immersive batch journey: pond to fork =================
   // A shrimp illustration travels the real supply chain. Scenes are plain SVG,
-  // so they can be edited by hand. Numbers are batch 2026201826's real weights.
+  // so they can be edited by hand. Numbers are one traced batch (representative).
   function shrimp(x, y, s, rot, c1, c2) {
     c1 = c1 || '#ff9d7a'; c2 = c2 || '#d9613a';
     return `<g transform="translate(${x},${y}) rotate(${rot || 0}) scale(${s || 1})">
@@ -872,7 +1052,7 @@
         </g>` },
 
     { key:'Receiving', title:'It is weighed, and it becomes a batch', kg:'1,519.9 kg', kgl:'recorded at the receiving dock',
-      cap:'On the dock it is weighed and quality tested, and a batch ID is finally created: 2026201826. Note the weight went UP against the purchase figure. Reconciling that gap between stages is a real part of the job.',
+      cap:'On the dock it is weighed and quality tested, and a batch ID is finally created: '+BATCH_ID+'. Note the weight went UP against the purchase figure. Reconciling that gap between stages is a real part of the job.',
       art:`<rect x="60" y="70" width="600" height="210" rx="10" fill="#111a27" stroke="#2b3a4d" stroke-width="2"/>
         <path d="M60,120 H660" stroke="#2b3a4d" stroke-width="2"/>
         <text x="86" y="103" font-size="13" fill="#7fa8bd">RECEIVING DOCK</text>
@@ -889,7 +1069,7 @@
           ${[-34,-8,18,44].map(y=>`<path d="M-34,${y} h30" stroke="#3a5570" stroke-width="3" stroke-linecap="round"/><path d="M8,${y-5} l7,8 l14,-16" stroke="#22c1a8" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}
           <text x="0" y="92" text-anchor="middle" font-size="12" fill="#7fa8bd">antibiotic &amp; QC tests</text>
         </g>
-        <text x="215" y="330" text-anchor="middle" font-size="13" fill="#aacef0" font-weight="700">BATCH 2026201826 CREATED</text>` },
+        <text x="215" y="330" text-anchor="middle" font-size="13" fill="#aacef0" font-weight="700">BATCH ${BATCH_ID} CREATED</text>` },
 
     { key:'Grading', title:'One batch becomes six', kg:'1,026.8 kg', kgl:'after beheading, sorted by count',
       cap:'The grading machine sorts by count: how many shrimp make a pound. Bigger shrimp on the left, smaller on the right. One arriving lane leaves as six different grades, each with its own price and its own destination.',
@@ -908,8 +1088,8 @@
         }).join('')}
         <text x="360" y="372" text-anchor="middle" font-size="12.5" fill="#7fa8bd">bigger shrimp ← count → smaller shrimp</text>` },
 
-    { key:'Processing', title:'Some is cooked, some is peeled', kg:'1,012 kg', kgl:'logged into soaking',
-      cap:'Now it splits by what the buyer ordered. Some grades are cooked, others are peeled and cut into forms like PD, PDTO or EZPL. The shrimp stops being one thing and becomes several products.',
+    { key:'Processing', title:'Some is cooked, some is peeled', kg:'~1,150 kg', kgl:'water uptake at soaking, est.',
+      cap:'Now it splits by what the buyer ordered. Some grades are cooked, others are peeled and cut into forms like PD, PDTO or EZPL. Soaking in a phosphate solution adds water, so measured mass actually rises here before it falls again. The shrimp stops being one thing and becomes several products.',
       art:`<g transform="translate(190,200)">
           <ellipse cx="0" cy="40" rx="96" ry="18" fill="#0e1522"/>
           <path d="M-84,-30 H84 L70,54 H-70 Z" fill="#1d2a3d" stroke="#5d7d9c" stroke-width="3"/>
@@ -927,20 +1107,20 @@
           <text x="0" y="84" text-anchor="middle" font-size="11.5" fill="#7fa8bd">PD · PDTO · EZPL · PVPD</text>
         </g>` },
 
-    { key:'Packing', title:'Batches get mixed into cartons', kg:'many parents', kgl:'per finished carton',
-      cap:'To fill an order, product from several batches is packed together. This is the moment traceability is won or lost: one carton now physically contains shrimp from multiple ponds and multiple days.',
+    { key:'Packing', title:'Batches get mixed into cartons', kg:'~1,085 kg', kgl:'est. share · many parent batches',
+      cap:'To fill an order, product from several batches is packed together. This is the moment traceability is won or lost: one carton now physically contains shrimp from multiple ponds and multiple days, so any single batch mass here is a pro-rata estimate, not a measurement.',
       art:`${[[170,230,1],[330,230,1],[490,230,1]].map(([x,y])=>`<g transform="translate(${x},${y})">
           <path d="M-62,-40 H62 V44 H-62 Z" fill="#1d2a3d" stroke="#4a6b8a" stroke-width="3"/>
           <path d="M-62,-40 L0,-64 L62,-40" fill="#22334a" stroke="#4a6b8a" stroke-width="3"/>
           <rect x="-34" y="-14" width="68" height="22" rx="4" fill="#0d1420" stroke="#22c1a8" stroke-width="1.6"/>
           <text x="0" y="2" text-anchor="middle" font-size="10.5" fill="#22c1a8" font-family="monospace">BATCH?</text>
           ${shrimp(-24,26,.3,4)}${shrimp(24,26,.3,-4)}</g>`).join('')}
-        ${[[170,330],[330,330],[490,330]].map(([x,y],i)=>`<text x="${x}" y="${y}" text-anchor="middle" font-size="11.5" fill="#e8b4b4" font-family="monospace">${['2026201826 +2','+3 more','6 parents'][i]}</text>`).join('')}
+        ${[[170,330],[330,330],[490,330]].map(([x,y],i)=>`<text x="${x}" y="${y}" text-anchor="middle" font-size="11.5" fill="#e8b4b4" font-family="monospace">${[BATCH_ID+' +2','+3 more','6 parents'][i]}</text>`).join('')}
         <path d="M232,262 H268 M392,262 H428" stroke="#eda100" stroke-width="3" stroke-linecap="round" stroke-dasharray="5 5"/>
         <text x="360" y="372" text-anchor="middle" font-size="13" fill="#eda100" font-weight="700">batches merge · lineage multiplies</text>` },
 
-    { key:'Export', title:'It ships, and someone eats it', kg:'PO assigned', kgl:'or held as dummy stock',
-      cap:'The carton is assigned a purchase order and exported. Somewhere on the other side of the world it reaches a plate. If a problem shows up there, every question runs backwards through everything you just saw.',
+    { key:'Export', title:'It ships, and someone eats it', kg:'~1,050 kg', kgl:'est. share · PO assigned',
+      cap:'The carton is assigned a purchase order and exported. From receiving to here, roughly a third of the mass has left as heads, shells and trim, and some of it as losses no stage recorded. Closing that mass-balance gap is exactly what the platform is for. Somewhere on the other side of the world it reaches a plate, and if a problem shows up there, every question runs backwards through everything you just saw.',
       art:`<path d="M40,300 Q180,286 320,300 T680,300" stroke="#2f7d9b" stroke-width="3" fill="none" opacity=".6"/>
         <path d="M40,322 Q200,308 360,322 T680,322" stroke="#2f7d9b" stroke-width="2.5" fill="none" opacity=".35"/>
         <g transform="translate(250,232)">
@@ -963,7 +1143,7 @@
     { key:'Lineage', title:'Now answer: which pond?', kg:'6 parents', kgl:'in a single carton',
       cap:'That is the whole problem in one question. After grading splits it and packing merges it, a table cannot answer where a carton came from. A knowledge graph can, because it stores the relationships, not just the rows. That is what SeaTrace was built to do.',
       art:`${[0,1,2,3,4,5].map(i=>{const x=90+i*84,y=110;return `<rect x="${x-36}" y="${y-24}" width="72" height="48" rx="8" fill="#101a26" stroke="#e34948" stroke-width="2"/>
-          <text x="${x}" y="${y+5}" text-anchor="middle" font-size="10.5" fill="#e8b4b4" font-family="monospace">26018${20+i*2}</text>
+          <text x="${x}" y="${y+5}" text-anchor="middle" font-size="10.5" fill="#e8b4b4" font-family="monospace">${PARENT_IDS[i]}</text>
           <path d="M${x},${y+26} C${x},${y+90} 360,${y+90} 360,238" stroke="#e34948" stroke-width="1.7" fill="none" opacity=".5" stroke-dasharray="5 4"/>`;}).join('')}
         <g transform="translate(360,268)">
           <path d="M-66,-30 H66 V44 H-66 Z" fill="#1d2a3d" stroke="#22c1a8" stroke-width="3"/>
@@ -1030,7 +1210,7 @@
     'Team': '<b>Team Structure &amp; Collaboration</b><ul><li>Describe Agile team structure (devs, QA, designers, ML engineers, etc.)</li><li>How you worked with: Product Managers, UX Designers, Dev Team (Backend, Fullstack), AI/ML Teams</li></ul>',
     'Execution': '<b>Execution &amp; PO Activities</b><ul><li>How you translated ideas into action (Backlog creation, refinement, writing stories with clear AC, cadence, blockers, scope adjustments)</li><li>If AI/ML: How you handled uncertainty, technical spikes, data issues</li></ul>',
     'Outcomes': '<b>Outcomes</b><ul><li>Was it delivered on time, to scope?</li><li>What KPIs or user feedback indicated success/failure?</li><li>Any surprises in delivery or adoption?</li></ul>',
-    'Lessons': '<b>Lessons Learned</b><ul><li>1–2 things you learned as a Product Owner (PO)</li><li>Is there anything you would have done differently and why?</li></ul>'
+    'Lessons': '<b>Lessons Learned</b><ul><li>1 to 2 things you learned as a Product Owner (PO)</li><li>Is there anything you would have done differently and why?</li></ul>'
   };
 
   railEl.innerHTML = groups.map(g => {
@@ -1124,6 +1304,7 @@
     rowsEl.innerHTML = scored.map((p, i) => {
       const reasons = (w >= 0.5 ? [p.tno, p.bno] : [p.bno, p.tno]).slice(0, 2).join(' · ');
       return `<div class="row ${i === 0 ? 'top' : ''}">
+        <span class="rank">#${i + 1}</span>
         <span class="score">${p.score}</span>
         <div style="flex:1">
           <div class="po">${p.id} <span style="color:var(--ink-500);font-weight:500">· Tier ${p.tier}</span></div>
