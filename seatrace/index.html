@@ -865,10 +865,9 @@
 <script>
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Client naming: the public page uses the generic form.
-  // The client can be named verbally in a live walkthrough.
-  // To name them on the page instead, swap the two lines below.
-  // const CLIENT_NAME = "Avanti Frozen Foods";
+  // Client naming: the public page uses the generic form. The client can be
+  // named verbally in a live walkthrough. To name them on the page instead,
+  // replace the string below (and the .client span default in section 01).
   const CLIENT_NAME = "A leading Indian shrimp exporter";
   document.querySelectorAll('.client').forEach(el => el.textContent = CLIENT_NAME);
 
