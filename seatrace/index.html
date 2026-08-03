@@ -865,10 +865,11 @@
 <script>
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Client naming: set to the JV partner for the panel session.
-  // After the panel, flip to the generic form for the public page:
-  // const CLIENT_NAME = "a leading Indian shrimp exporter";
-  const CLIENT_NAME = "Avanti Frozen Foods";
+  // Client naming: the public page uses the generic form.
+  // The client can be named verbally in a live walkthrough.
+  // To name them on the page instead, swap the two lines below.
+  // const CLIENT_NAME = "Avanti Frozen Foods";
+  const CLIENT_NAME = "a leading Indian shrimp exporter";
   document.querySelectorAll('.client').forEach(el => el.textContent = CLIENT_NAME);
 
   // Batch identity: synthetic ID, masked from the source system. Change here only.
